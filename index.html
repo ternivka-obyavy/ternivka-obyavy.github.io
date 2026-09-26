@@ -86,7 +86,17 @@
       createUserWithEmailAndPassword,
       signInWithEmailAndPassword 
     } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+    import { 
+      getFirestore, 
+      doc, 
+      setDoc, 
+      addCollection,
+      onSnapshot, 
+      collection,
+      addDoc,
+      query,
+      orderBy 
+    } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
     // Конфігурація Firebase
     const firebaseConfig = {
@@ -105,11 +115,23 @@
     const provider = new GoogleAuthProvider();
 
     window.currentUser = null;
+    window.allAds = [];
+    window.currentCategory = 'all';
 
     // Відстеження кількості зареєстрованих користувачів у реальному часі
     onSnapshot(collection(db, "users"), (snapshot) => {
       const count = snapshot.size;
       document.getElementById('userCount').innerText = count;
+    });
+
+    // Завантаження оголошень з Firestore у реальному часі
+    const q = query(collection(db, "ads"), orderBy("createdAt", "desc"));
+    onSnapshot(q, (snapshot) => {
+      window.allAds = [];
+      snapshot.forEach((docSnap) => {
+        window.allAds.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      filterCategory(window.currentCategory, false);
     });
 
     // Відстеження стану входу
@@ -118,7 +140,6 @@
         window.currentUser = user;
         document.getElementById('authBtn').innerText = `Вийти (${user.displayName || user.email})`;
         
-        // Зберігаємо користувача в базу даних, якщо його ще немає
         try {
           await setDoc(doc(db, "users", user.uid), {
             name: user.displayName || user.email.split('@')[0],
@@ -134,6 +155,19 @@
       }
     });
 
+    // Функція створення нового оголошення в базі даних
+    window.saveNewAdToDB = async function(adData) {
+      try {
+        await addDoc(collection(db, "ads"), {
+          ...adData,
+          createdAt: new Date()
+        });
+        closeModal('addAdModal');
+      } catch (error) {
+        alert("Помилка при збереженні оголошення: " + error.message);
+      }
+    };
+
     // Вхід через Google
     window.loginWithGoogle = async function() {
       try {
@@ -144,7 +178,6 @@
           openModal('addAdModal');
         }
       } catch (error) {
-        console.error("Помилка авторизації:", error);
         alert("Не вдалося увійти через Google: " + error.message);
       }
     };
@@ -348,8 +381,6 @@
   </div>
 
   <script>
-    let ads = [];
-
     function renderAds(list) {
       const container = document.getElementById('adsContainer');
       container.innerHTML = '';
@@ -369,7 +400,7 @@
                 <div class="ad-title">${ad.title}</div>
                 <div class="ad-price">${ad.price}</div>
               </div>
-              <div class="ad-date">${ad.date}</div>
+              <div class="ad-date">Щойно</div>
             </div>
           </div>
         `;
@@ -395,10 +426,14 @@
       }
     }
 
-    function filterCategory(cat) {
+    function filterCategory(cat, updateGlobal = true) {
+      if (updateGlobal) window.currentCategory = cat;
+      
+      const adsToFilter = window.allAds || [];
+      
       if (cat === 'all') {
         document.getElementById('sectionTitle').innerText = "Усі оголошення";
-        renderAds(ads);
+        renderAds(adsToFilter);
       } else {
         const names = { 
           realty: 'Нерухомість', 
@@ -411,14 +446,15 @@
           other: 'Інші оголошення'
         };
         document.getElementById('sectionTitle').innerText = "Категорія: " + names[cat];
-        const filtered = ads.filter(a => a.category === cat);
+        const filtered = adsToFilter.filter(a => a.category === cat);
         renderAds(filtered);
       }
     }
 
     function searchAds() {
       const query = document.getElementById('searchInput').value.toLowerCase();
-      const filtered = ads.filter(a => a.title.toLowerCase().includes(query));
+      const adsToSearch = window.allAds || [];
+      const filtered = adsToSearch.filter(a => a.title.toLowerCase().includes(query));
       renderAds(filtered);
     }
 
@@ -433,21 +469,16 @@
       const img = document.getElementById('adImgInput').value;
 
       const newAd = {
-        id: Date.now(),
         title: title,
         price: price,
         category: category,
         img: img,
-        date: 'Щойно'
+        userEmail: window.currentUser ? window.currentUser.email : 'Anonymous'
       };
 
-      ads.unshift(newAd);
-      renderAds(ads);
-      closeModal('addAdModal');
+      window.saveNewAdToDB(newAd);
       e.target.reset();
     }
-
-    renderAds(ads);
   </script>
 </body>
 </html>

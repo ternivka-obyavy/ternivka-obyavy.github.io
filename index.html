@@ -4,292 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Тернівка Об'яви - Дошка оголошень</title>
-    
     <!-- Підключення Supabase JS SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <style>
-        :root {
-            --primary-color: #012b28;
-            --accent-color: #ffce32;
-            --bg-color: #f4f4f9;
-        }
-
-        body { 
-            font-family: Arial, sans-serif; 
-            margin: 0; 
-            padding: 0; 
-            background-color: var(--bg-color); 
-            color: #333;
-        }
-
-        header { 
-            background: var(--primary-color);
-            color: white;
-            padding: 15px 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
+        :root { --primary-color: #012b28; --accent-color: #ffce32; --bg-color: #f4f4f9; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: var(--bg-color); color: #333; }
+        header { background: var(--primary-color); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .logo-area { display: flex; align-items: center; gap: 12px; text-decoration: none; color: white; font-size: 1.5rem; font-weight: 800; letter-spacing: 0.5px; transition: opacity 0.2s ease; }
+        .logo-area:hover { opacity: 0.9; }
+        .logo-icon { font-size: 1.8rem; background: rgba(255, 206, 50, 0.15); padding: 6px 10px; border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(255, 206, 50, 0.3); display: flex; align-items: center; justify-content: center; }
+        .logo-text span { color: var(--accent-color); }
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
         
-        /* Гарне оформлення логотипа / назви */
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-            color: white;
-            font-size: 1.5rem;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-            transition: opacity 0.2s ease;
-        }
-
-        .logo-area:hover {
-            opacity: 0.9;
-        }
-
-        .logo-icon {
-            font-size: 1.8rem;
-            background: rgba(255, 206, 50, 0.15);
-            padding: 6px 10px;
-            border-radius: 10px;
-            box-shadow: inset 0 0 0 1px rgba(255, 206, 50, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .logo-text span {
-            color: var(--accent-color);
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .container { 
-            max-width: 1000px; 
-            margin: 0 auto; 
-            padding: 20px; 
-        }
-
         /* Пошуковий блок */
-        .search-box {
-            background: var(--accent-color);
-            padding: 20px;
-            border-radius: 8px;
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        }
+        .search-box { background: var(--accent-color); padding: 20px; border-radius: 8px; display: flex; gap: 10px; margin-bottom: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .search-box input { flex: 1; padding: 12px 15px; border: none; border-radius: 4px; font-size: 1rem; outline: none; }
+        .search-box button { background: var(--primary-color); color: white; border: none; padding: 0 25px; border-radius: 4px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+        .search-box button:hover { background: #004d48; }
 
-        .search-box input {
-            flex: 1;
-            padding: 12px 15px;
-            border: none;
-            border-radius: 4px;
-            font-size: 1rem;
-            outline: none;
-        }
-
-        .search-box button {
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 0 25px;
-            border-radius: 4px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .search-box button:hover {
-            background: #004d48;
-        }
-
-        /* Категорії (рівномірне вирівнювання) */
-        .categories-section { 
-            margin-bottom: 35px; 
-        }
+        /* Категорії */
+        .categories-section { margin-bottom: 35px; }
+        .categories-section h2 { font-size: 1.3rem; color: #333; margin-bottom: 15px; }
+        .categories-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        .category-card { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 10px; background-color: white; border-radius: 8px; text-decoration: none; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.04); transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease; }
         
-        .categories-section h2 { 
-            font-size: 1.3rem; 
-            color: #333; 
-            margin-bottom: 15px; 
-        }
+        @keyframes floatIcon { 0% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-6px) scale(1.08); } 100% { transform: translateY(0px) scale(1); } }
+        .category-card .icon { font-size: 2rem; margin-bottom: 8px; display: inline-block; animation: floatIcon 3s ease-in-out infinite; }
+        .category-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); background-color: #fafafa; }
+        .category-card h3 { margin: 0; font-size: 0.9rem; font-weight: 600; text-align: center; }
 
-        .categories-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr); /* Рівно 4 колонки в ряд */
-            gap: 15px;
-        }
-
-        .category-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px 10px;
-            background-color: white;
-            border-radius: 8px;
-            text-decoration: none;
-            color: #333;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.04);
-            transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
-        }
-
-        /* Безперервна анімація для іконок */
-        @keyframes floatIcon {
-            0% {
-                transform: translateY(0px) scale(1);
-            }
-            50% {
-                transform: translateY(-6px) scale(1.08);
-            }
-            100% {
-                transform: translateY(0px) scale(1);
-            }
-        }
-
-        .category-card .icon { 
-            font-size: 2rem; 
-            margin-bottom: 8px; 
-            display: inline-block;
-            animation: floatIcon 3s ease-in-out infinite;
-        }
-
-        /* Різна затримка анімації для кожної іконки */
-        .category-card:nth-child(1) .icon { animation-delay: 0s; }
-        .category-card:nth-child(2) .icon { animation-delay: 0.4s; }
-        .category-card:nth-child(3) .icon { animation-delay: 0.8s; }
-        .category-card:nth-child(4) .icon { animation-delay: 1.2s; }
-        .category-card:nth-child(5) .icon { animation-delay: 1.6s; }
-        .category-card:nth-child(6) .icon { animation-delay: 2.0s; }
-        .category-card:nth-child(7) .icon { animation-delay: 2.4s; }
-        .category-card:nth-child(8) .icon { animation-delay: 2.8s; }
-
-        .category-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            background-color: #fafafa;
-        }
-        
-        .category-card h3 { 
-            margin: 0; 
-            font-size: 0.9rem; 
-            font-weight: 600; 
-            text-align: center; 
-        }
-
-        /* Адаптивність сітки категорій для мобільних */
-        @media (max-width: 768px) {
-            .categories-grid {
-                grid-template-columns: repeat(2, 1fr); /* На телефонах по 2 в ряд */
-            }
-        }
+        @media (max-width: 768px) { .categories-grid { grid-template-columns: repeat(2, 1fr); } }
 
         /* Сітка оголошень */
-        .ads-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 20px;
-        }
-
-        .card { 
-            background: white; 
-            border-radius: 8px; 
-            overflow: hidden;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.06); 
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.2s;
-        }
-
-        .card:hover {
-            transform: translateY(-3px);
-        }
-
-        .card img { 
-            width: 100%; 
-            height: 160px; 
-            object-fit: cover; 
-            background: #eee;
-        }
-
-        .card-content {
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-        }
-
-        .card h3 { 
-            font-size: 1rem; 
-            margin: 0 0 8px 0; 
-            color: #333; 
-        }
-
-        .card .price {
-            font-weight: bold;
-            font-size: 1.1rem;
-            color: var(--primary-color);
-            margin-top: auto;
-            margin-bottom: 8px;
-        }
-
-        .card .phone {
-            font-size: 0.85rem;
-            color: #666;
-        }
+        .ads-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+        .card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.06); display: flex; flex-direction: column; transition: transform 0.2s; }
+        .card:hover { transform: translateY(-3px); }
+        .card img { width: 100%; height: 160px; object-fit: cover; background: #eee; }
+        .card-content { padding: 15px; display: flex; flex-direction: column; flex: 1; }
+        .card h3 { font-size: 1rem; margin: 0 0 8px 0; color: #333; }
+        .card .price { font-weight: bold; font-size: 1.1rem; color: var(--primary-color); margin-top: auto; margin-bottom: 8px; }
+        .card .phone { font-size: 0.85rem; color: #666; }
 
         /* Кнопки */
-        .btn { 
-            background: white; 
-            color: var(--primary-color); 
-            border: 2px solid var(--primary-color);
-            padding: 8px 16px; 
-            border-radius: 4px; 
-            cursor: pointer; 
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-        }
+        .btn { background: white; color: var(--primary-color); border: 2px solid var(--primary-color); padding: 8px 16px; border-radius: 4px; cursor: pointer; text-decoration: none; font-weight: bold; font-size: 0.9rem; transition: all 0.2s; display: inline-block; text-align: center; }
+        .btn:hover { background: var(--primary-color); color: white; }
+        .btn-primary { background: var(--accent-color); color: var(--primary-color); border: none; }
+        .btn-primary:hover { background: #e6b825; }
         
-        .btn:hover { 
-            background: var(--primary-color); 
-            color: white; 
-        }
-
-        .btn-primary {
-            background: var(--accent-color);
-            color: var(--primary-color);
-            border: none;
-        }
-
-        .btn-primary:hover {
-            background: #e6b825;
-        }
-
-        .user-badge {
-            font-size: 0.85rem;
-            background: rgba(255,255,255,0.15);
-            padding: 6px 12px;
-            border-radius: 4px;
-        }
-
-        h2.section-title {
-            font-size: 1.4rem;
-            color: #333;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #e2e2e2;
-            padding-bottom: 8px;
-        }
+        h2.section-title { font-size: 1.4rem; color: #333; margin-bottom: 20px; border-bottom: 2px solid #e2e2e2; padding-bottom: 8px; }
     </style>
 </head>
 <body>
@@ -300,12 +63,11 @@
             <div class="logo-text">Тернівка <span>Об'яви</span></div>
         </a>
         <div id="auth-container" class="header-right">
-            <!-- Заповнюється JS (Кнопки входу / користувач) -->
+            <!-- Заповнюється JS (Кнопки входу / користувач / кабінет) -->
         </div>
     </header>
 
     <div class="container">
-        
         <!-- Пошук -->
         <div class="search-box">
             <input type="text" id="search-input" placeholder="Що шукаєте? (наприклад, Квартира, Авто...)">
@@ -316,38 +78,14 @@
         <section class="categories-section">
             <h2>Головні категорії</h2>
             <div class="categories-grid">
-                <a href="catalog.html?category=realty" class="category-card">
-                    <span class="icon">🏙️</span>
-                    <h3>Нерухомість</h3>
-                </a>
-                <a href="catalog.html?category=auto" class="category-card">
-                    <span class="icon">🚗</span>
-                    <h3>Авто</h3>
-                </a>
-                <a href="catalog.html?category=work" class="category-card">
-                    <span class="icon">💼</span>
-                    <h3>Робота</h3>
-                </a>
-                <a href="catalog.html?category=services" class="category-card">
-                    <span class="icon">🛠️</span>
-                    <h3>Послуги</h3>
-                </a>
-                <a href="catalog.html?category=electronics" class="category-card">
-                    <span class="icon">📱</span>
-                    <h3>Електроніка</h3>
-                </a>
-                <a href="catalog.html?category=home" class="category-card">
-                    <span class="icon">🏡</span>
-                    <h3>Дім та сад</h3>
-                </a>
-                <a href="catalog.html?category=sport" class="category-card">
-                    <span class="icon">⚽</span>
-                    <h3>Спорт</h3>
-                </a>
-                <a href="catalog.html?category=other" class="category-card">
-                    <span class="icon">📦</span>
-                    <h3>Інші</h3>
-                </a>
+                <a href="catalog.html?category=realty" class="category-card"><span class="icon">🏙️</span><h3>Нерухомість</h3></a>
+                <a href="catalog.html?category=auto" class="category-card"><span class="icon">🚗</span><h3>Авто</h3></a>
+                <a href="catalog.html?category=work" class="category-card"><span class="icon">💼</span><h3>Робота</h3></a>
+                <a href="catalog.html?category=services" class="category-card"><span class="icon">🛠️</span><h3>Послуги</h3></a>
+                <a href="catalog.html?category=electronics" class="category-card"><span class="icon">📱</span><h3>Електроніка</h3></a>
+                <a href="catalog.html?category=home" class="category-card"><span class="icon">🏡</span><h3>Дім та сад</h3></a>
+                <a href="catalog.html?category=sport" class="category-card"><span class="icon">⚽</span><h3>Спорт</h3></a>
+                <a href="catalog.html?category=other" class="category-card"><span class="icon">📦</span><h3>Інші</h3></a>
             </div>
         </section>
 
@@ -360,176 +98,144 @@
 
     <!-- Модальне вікно авторизації Supabase -->
     <div id="auth-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
-      <div style="background:white; padding:25px; border-radius:12px; max-width:380px; width:90%; box-shadow:0 4px 20px rgba(0,0,0,0.2); position:relative; font-family:sans-serif;">
-        <span id="close-auth-modal" style="cursor:pointer; position:absolute; top:12px; right:15px; font-size:22px; color:#aaa;">&times;</span>
-        <h2 style="margin-top:0; margin-bottom:20px; font-size:20px; text-align:center; color:#333;">Вхід / Реєстрація</h2>
+        <div style="background:white; padding:25px; border-radius:12px; max-width:380px; width:90%; box-shadow:0 4px 20px rgba(0,0,0,0.2); position:relative; font-family:sans-serif;">
+            <span id="close-auth-modal" style="cursor:pointer; position:absolute; top:12px; right:15px; font-size:22px; color:#aaa;">&times;</span>
+            <h2 style="margin-top:0; margin-bottom:20px; font-size:20px; text-align:center; color:#333;">Вхід / Реєстрація</h2>
+            
+            <button id="google-login-btn" style="width:100%; padding:11px; margin-bottom:15px; background:#fff; color:#444; border:1px solid #ddd; border-radius:6px; cursor:pointer; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:10px;">
+                🌐 Увійти через Google
+            </button>
+            
+            <div style="text-align:center; margin-bottom:15px; color:#888; font-size:14px; position:relative;">
+                <span style="background:white; padding:0 10px; position:relative; z-index:1;">або через пошту</span>
+                <hr style="border:none; border-top:1px solid #eee; position:absolute; top:50%; width:100%; margin:0; z-index:0;">
+            </div>
 
-        <!-- Кнопка Google -->
-        <button id="google-login-btn" style="width:100%; padding:11px; margin-bottom:15px; background:#fff; color:#444; border:1px solid #ddd; border-radius:6px; cursor:pointer; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:10px;">
-          🌐 Увійти через Google
-        </button>
-        
-        <div style="text-align:center; margin-bottom:15px; color:#888; font-size:14px; position:relative;">
-          <span style="background:white; padding:0 10px; position:relative; z-index:1;">або через пошту</span>
-          <hr style="border:none; border-top:1px solid #eee; position:absolute; top:50%; width:100%; margin:0; z-index:0;">
+            <form id="email-auth-form" onsubmit="return false;">
+                <input type="email" id="auth-email" placeholder="Електронна пошта" required style="width:100%; padding:10px; margin-bottom:10px; border:1px solid #ddd; border-radius:6px; box-sizing:border-box;">
+                <input type="password" id="auth-password" placeholder="Пароль (мін. 6 символів)" required style="width:100%; padding:10px; margin-bottom:15px; border:1px solid #ddd; border-radius:6px; box-sizing:border-box;">
+                <div style="display:flex; gap:10px;">
+                    <button type="button" id="submit-login-btn" style="flex:1; padding:10px; background:#28a745; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Увійти</button>
+                    <button type="button" id="submit-signup-btn" style="flex:1; padding:10px; background:#007bff; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Реєстрація</button>
+                </div>
+            </form>
         </div>
-
-        <!-- Форма пошта/пароль -->
-        <form id="email-auth-form" onsubmit="return false;">
-          <input type="email" id="auth-email" placeholder="Електронна пошта" required style="width:100%; padding:10px; margin-bottom:10px; border:1px solid #ddd; border-radius:6px; box-sizing:border-box;">
-          <input type="password" id="auth-password" placeholder="Пароль (мін. 6 символів)" required style="width:100%; padding:10px; margin-bottom:15px; border:1px solid #ddd; border-radius:6px; box-sizing:border-box;">
-          
-          <div style="display:flex; gap:10px;">
-            <button type="button" id="submit-login-btn" style="flex:1; padding:10px; background:#28a745; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Увійти</button>
-            <button type="button" id="submit-signup-btn" style="flex:1; padding:10px; background:#007bff; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Реєстрація</button>
-          </div>
-        </form>
-      </div>
     </div>
 
-<script>
-    const SUPABASE_URL = 'https://lpocqhvozuugcnzgquiu.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_ybld3op1Zra4aqnNEykSiw__28Xp-dC';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    <script>
+        const SUPABASE_URL = 'https://lpocqhvozuugcnzgquiu.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_ybld3op1Zra4aqnNEykSiw__28Xp-dC';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Логіка модального вікна
-    const modal = document.getElementById('auth-modal');
-    const closeBtn = document.getElementById('close-auth-modal');
+        const modal = document.getElementById('auth-modal');
+        const closeBtn = document.getElementById('close-auth-modal');
 
-    function openAuthModal() {
-        modal.style.display = 'flex';
-    }
+        function openAuthModal() { modal.style.display = 'flex'; }
+        closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+        window.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
 
-    closeBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
+        document.getElementById('google-login-btn').addEventListener('click', async () => {
+            const { error } = await supabaseClient.auth.signInWithOAuth({ provider: 'google' });
+            if (error) alert("Помилка входу через Google: " + error.message);
+        });
 
-    window.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
+        document.getElementById('submit-signup-btn').addEventListener('click', async () => {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            if (!email || !password) { alert("Будь ласка, заповніть усі поля."); return; }
+            const { error } = await supabaseClient.auth.signUp({ email, password });
+            if (error) {
+                alert("Помилка реєстрації: " + error.message);
+            } else {
+                alert("Акаунт успішно створено!");
+                modal.style.display = 'none';
+            }
+        });
 
-    // 1. Вхід через Google
-    document.getElementById('google-login-btn').addEventListener('click', async () => {
-        const { error } = await supabaseClient.auth.signInWithOAuth({ provider: 'google' });
-        if (error) alert("Помилка входу через Google: " + error.message);
-    });
+        document.getElementById('submit-login-btn').addEventListener('click', async () => {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            if (!email || !password) { alert("Будь ласка, заповніть усі поля."); return; }
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) {
+                alert("Помилка входу: " + error.message);
+            } else {
+                modal.style.display = 'none';
+                checkUser();
+            }
+        });
 
-    // 2. Реєстрація за поштою та паролем
-    document.getElementById('submit-signup-btn').addEventListener('click', async () => {
-        const email = document.getElementById('auth-email').value;
-        const password = document.getElementById('auth-password').value;
-
-        if (!email || !password) {
-            alert("Будь ласка, заповніть усі поля.");
-            return;
-        }
-
-        const { error } = await supabaseClient.auth.signUp({ email, password });
-        if (error) {
-            alert("Помилка реєстрації: " + error.message);
-        } else {
-            alert("Акаунт успішно створено! Перевірте пошту для підтвердження (якщо увімкнено) або увійдіть.");
-            modal.style.display = 'none';
-        }
-    });
-
-    // 3. Вхід за поштою та паролем
-    document.getElementById('submit-login-btn').addEventListener('click', async () => {
-        const email = document.getElementById('auth-email').value;
-        const password = document.getElementById('auth-password').value;
-
-        if (!email || !password) {
-            alert("Будь ласка, заповніть усі поля.");
-            return;
-        }
-
-        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) {
-            alert("Помилка входу: " + error.message);
-        } else {
-            modal.style.display = 'none';
+        async function logout() {
+            await supabaseClient.auth.signOut();
             checkUser();
         }
-    });
 
-    async function logout() {
-        await supabaseClient.auth.signOut();
-        checkUser();
-    }
-
-    // Перевірка стану користувача та оновлення шапки
-    async function checkUser() {
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        const authContainer = document.getElementById('auth-container');
-
-        if (user) {
-            const userName = user.user_metadata?.full_name || user.email;
-            authContainer.innerHTML = `
-                <a href="create.html" class="btn btn-primary">+ Додати оголошення</a>
-                <span class="user-badge">${userName}</span>
-                <button class="btn" style="border-color: #ff5252; color: #ff5252;" onclick="logout()">Вийти</button>
-            `;
-        } else {
-            authContainer.innerHTML = `
-                <a href="create.html" class="btn btn-primary">+ Додати оголошення</a>
-                <button class="btn" onclick="openAuthModal()">Увійти / Реєстрація</button>
-            `;
-        }
-    }
-
-    // Завантаження оголошень з БД Supabase
-    async function fetchAds() {
-        const container = document.getElementById('ads-container');
-        try {
-            const { data: ads, error } = await supabaseClient
-                .from('announcements')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-
-            if (!ads || ads.length === 0) {
-                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #777;">Оголошень поки немає. Будьте першим!</p>';
-                return;
-            }
-
-            let html = '';
-            ads.forEach(ad => {
-                const imageUrl = ad.image_url ? ad.image_url : 'https://via.placeholder.com/220x160?text=Без+фото';
-                html += `
-                    <div class="card">
-                        <img src="${escapeHtml(imageUrl)}" alt="Фото">
-                        <div class="card-content">
-                            <h3>${escapeHtml(ad.title)}</h3>
-                            <div class="price">${ad.price ? escapeHtml(ad.price) + ' грн' : 'Договірна'}</div>
-                            <div class="phone">тел: ${escapeHtml(ad.phone || 'Не вказано')}</div>
-                        </div>
-                    </div>
+        // Перевірка стану користувача (тепер з кнопкою "Кабінет")
+        async function checkUser() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            const authContainer = document.getElementById('auth-container');
+            if (user) {
+                const userName = user.user_metadata?.full_name || user.email;
+                authContainer.innerHTML = `
+                    <a href="create.html" class="btn btn-primary">+ Додати оголошення</a>
+                    <a href="profile.html" class="btn" style="background: white; color: var(--primary-color);">Кабінет (${userName})</a>
+                    <button class="btn" style="border-color: #ff5252; color: #ff5252; background: transparent;" onclick="logout()">Вийти</button>
                 `;
-            });
-            container.innerHTML = html;
-        } catch (error) {
-            container.innerHTML = '<p style="grid-column: 1/-1; color: red;">Помилка завантаження оголошень з бази даних.</p>';
-            console.error(error);
+            } else {
+                authContainer.innerHTML = `
+                    <a href="create.html" class="btn btn-primary">+ Додати оголошення</a>
+                    <button class="btn" style="background: white; color: var(--primary-color);" onclick="openAuthModal()">Увійти / Реєстрація</button>
+                `;
+            }
         }
-    }
 
-    function searchAds() {
-        const query = document.getElementById('search-input').value;
-        alert("Пошук за запитом: " + query);
-    }
+        async function fetchAds() {
+            const container = document.getElementById('ads-container');
+            try {
+                const { data: ads, error } = await supabaseClient
+                    .from('announcements')
+                    .select('*')
+                    .order('created_at', { ascending: false });
 
-    function escapeHtml(text) {
-        if (!text) return '';
-        return text.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    }
+                if (error) throw error;
 
-    // Ініціалізація при завантаженні
-    checkUser();
-    fetchAds();
-</script>
+                if (!ads || ads.length === 0) {
+                    container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #777;">Оголошень поки немає. Будьте першим!</p>';
+                    return;
+                }
 
+                let html = '';
+                ads.forEach(ad => {
+                    const imageUrl = ad.image_url ? ad.image_url : 'https://via.placeholder.com/220x160?text=Без+фото';
+                    html += `
+                        <div class="card">
+                            <img src="${escapeHtml(imageUrl)}" alt="Фото">
+                            <div class="card-content">
+                                <h3>${escapeHtml(ad.title)}</h3>
+                                <div class="price">${ad.price ? escapeHtml(ad.price) + ' грн' : 'Договірна'}</div>
+                                <div class="phone">тел: ${escapeHtml(ad.phone || 'Не вказано')}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } catch (error) {
+                container.innerHTML = '<p style="grid-column: 1/-1; color: red;">Помилка завантаження оголошень з бази даних.</p>';
+            }
+        }
+
+        function searchAds() {
+            const query = document.getElementById('search-input').value;
+            alert("Пошук за запитом: " + query);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        checkUser();
+        fetchAds();
+    </script>
 </body>
 </html>

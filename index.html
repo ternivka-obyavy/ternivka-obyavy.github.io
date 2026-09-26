@@ -98,6 +98,10 @@
         <div class="cat-icon">🏡</div>
         <div class="cat-title">Дім та сад</div>
       </div>
+      <div class="cat-item" onclick="filterCategory('services')">
+        <div class="cat-icon">🛠️</div>
+        <div class="cat-title">Послуги</div>
+      </div>
       <div class="cat-item" onclick="filterCategory('sport')">
         <div class="cat-icon">⚽</div>
         <div class="cat-title">Спорт</div>
@@ -151,7 +155,7 @@
       <form onsubmit="addNewAd(event)">
         <div class="form-group">
           <label>Заголовок</label>
-          <input type="text" id="adTitleInput" required placeholder="Наприклад: Продам диван">
+          <input type="text" id="adTitleInput" required placeholder="Наприклад: Ремонт побутової техніки">
         </div>
         <div class="form-group">
           <label>Категорія</label>
@@ -161,6 +165,7 @@
             <option value="work">Робота</option>
             <option value="electronics">Електроніка</option>
             <option value="home_garden">Дім та сад</option>
+            <option value="services">Послуги</option>
             <option value="sport">Спорт</option>
             <option value="other">Інші оголошення</option>
           </select>
@@ -253,6 +258,7 @@
           work: 'Робота', 
           electronics: 'Електроніка',
           home_garden: 'Дім та сад',
+          services: 'Послуги',
           sport: 'Спорт',
           other: 'Інші оголошення'
         };

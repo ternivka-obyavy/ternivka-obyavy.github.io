@@ -99,9 +99,9 @@
     </div>
 
     <!-- Ads List -->
-    <div class="section-title" id="sectionTitle">Останні оголошення</div>
+    <div class="section-title" id="sectionTitle">Усі оголошення</div>
     <div class="ads-grid" id="adsContainer">
-      <!-- Cards will be inserted here by JS -->
+      <!-- Картки будуть додаватися сюди через JS -->
     </div>
   </container>
 
@@ -157,19 +157,15 @@
   </div>
 
   <script>
-    // Initial Data
-    let ads = [
-      { id: 1, title: '2-кімнатна квартира в центрі', price: '12 000 грн', category: 'realty', img: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=500', date: 'Сьогодні о 10:15' },
-      { id: 2, title: 'Volkswagen Golf 2015 року', price: '320 000 грн', category: 'auto', img: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=500', date: 'Сьогодні о 09:30' },
-      { id: 3, title: 'iPhone 13 128GB Стан 9/10', price: '18 500 грн', category: 'electronics', img: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500', date: 'Учора о 18:40' }
-    ];
+    // Порожній масив оголошень
+    let ads = [];
 
     function renderAds(list) {
       const container = document.getElementById('adsContainer');
       container.innerHTML = '';
       
       if (list.length === 0) {
-        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #7f9799;">Оголошень не знайдено.</p>';
+        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #7f9799; padding: 40px 0; font-size: 16px;">Оголошень поки немає. Будьте першим, хто додасть оголошення!</p>';
         return;
       }
 
@@ -240,7 +236,7 @@
       e.target.reset();
     }
 
-    // Initial render
+    // Початкове відображення
     renderAds(ads);
   </script>
 </body>

@@ -1,484 +1,230 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Тернівка Об'яви — Дошка оголошень</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background-color: #f2f4f5; color: #002f34; }
-
-    /* Header */
-    header { background-color: #002f34; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; color: white; }
-    .logo { font-size: 24px; font-weight: bold; color: #23e5bf; text-decoration: none; cursor: pointer; }
-    .nav-buttons { display: flex; gap: 15px; align-items: center; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тернівка Об'яви - Головна</title>
     
-    /* Counter Badge */
-    .user-counter { background-color: rgba(255, 255, 255, 0.15); color: #23e5bf; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
-    .user-counter span { color: white; font-weight: bold; }
+    <!-- Підключення Firebase SDK (Auth та Firestore) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-    .btn-auth { background: transparent; color: white; border: none; font-weight: 600; cursor: pointer; font-size: 15px; }
-    .btn-add { background-color: white; color: #002f34; padding: 10px 20px; border-radius: 4px; font-weight: bold; text-decoration: none; border: 2px solid white; cursor: pointer; transition: 0.2s; }
-    .btn-add:hover { background-color: transparent; color: white; }
-
-    /* Search & Filters */
-    .search-section { background-color: #002f34; padding: 30px 5% 50px; text-align: center; }
-    .search-box { display: flex; max-width: 800px; margin: 0 auto; gap: 10px; }
-    .search-input { flex: 1; padding: 14px; border: none; border-radius: 4px; font-size: 16px; outline: none; }
-    .btn-search { background-color: #23e5bf; color: #002f34; border: none; padding: 0 25px; border-radius: 4px; font-weight: bold; font-size: 16px; cursor: pointer; }
-
-    /* Main Content */
-    container { display: block; max-width: 1100px; margin: -20px auto 40px; padding: 0 15px; }
-    
-    /* Categories */
-    .categories { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; margin-bottom: 30px; }
-    .cat-item { text-align: center; cursor: pointer; padding: 10px 15px; border-radius: 8px; transition: 0.2s; min-width: 100px; }
-    .cat-item:hover { background-color: #e9fcf8; }
-    .cat-icon { font-size: 28px; margin-bottom: 5px; }
-    .cat-title { font-size: 14px; font-weight: 600; }
-
-    /* Ads Grid */
-    .section-title { font-size: 22px; font-weight: bold; margin-bottom: 20px; }
-    .ads-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 20px; }
-    .ad-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s; display: flex; flex-direction: column; }
-    .ad-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); transform: translateY(-2px); }
-    .ad-img { width: 100%; height: 160px; object-fit: cover; background-color: #e0e0e0; }
-    .ad-info { padding: 15px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-    .ad-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #002f34; }
-    .ad-price { font-size: 18px; font-weight: bold; color: #002f34; margin-bottom: 8px; }
-    .ad-date { font-size: 12px; color: #7f9799; }
-
-    /* Modals */
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,47,52,0.7); justify-content: center; align-items: center; z-index: 1000; }
-    .modal-content { background: white; padding: 30px; border-radius: 8px; width: 100%; max-width: 450px; position: relative; max-height: 90vh; overflow-y: auto; }
-    .close-btn { position: absolute; top: 15px; right: 15px; font-size: 20px; cursor: pointer; border: none; background: none; }
-    .form-group { margin-bottom: 15px; }
-    .form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; }
-    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #7f9799; border-radius: 4px; font-size: 14px; }
-    .btn-submit { width: 100%; background-color: #002f34; color: white; padding: 12px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-    
-    .auth-alert { background-color: #ffebe9; color: #cc0000; padding: 10px; border-radius: 4px; font-size: 14px; margin-bottom: 15px; display: none; }
-
-    /* Social Auth Buttons */
-    .btn-social { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 4px; border: 1px solid #ccc; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 14px; background: white; transition: 0.2s; }
-    .btn-social:hover { background-color: #f8f9fa; }
-    .btn-google { border-color: #4285F4; color: #4285F4; }
-
-    .divider { text-align: center; margin-bottom: 15px; color: #7f9799; font-size: 14px; position: relative; }
-    .divider::before { content: ""; position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: #e0e0e0; z-index: 0; }
-    .divider span { background: white; padding: 0 10px; position: relative; z-index: 1; }
-    
-    .auth-switch-links { display: flex; gap: 10px; margin-top: 10px; }
-    .auth-switch-links button { flex: 1; padding: 10px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
-    #emailLoginBtn { background-color: #002f34; color: white; }
-    #emailRegisterBtn { background-color: #23e5bf; color: #002f34; }
-  </style>
-
-  <!-- Firebase Web SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-    import { 
-      getAuth, 
-      signInWithPopup, 
-      GoogleAuthProvider, 
-      signOut, 
-      onAuthStateChanged,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword 
-    } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-    import { 
-      getFirestore, 
-      doc, 
-      setDoc, 
-      addCollection,
-      onSnapshot, 
-      collection,
-      addDoc,
-      query,
-      orderBy 
-    } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
-
-    // Конфігурація Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyCeMdGopJlzj29W1w6NV6bwC4ilRB_U8EQ",
-      authDomain: "ternivka-obyavy.firebaseapp.com",
-      projectId: "ternivka-obyavy",
-      storageBucket: "ternivka-obyavy.firebasestorage.app",
-      messagingSenderId: "613440072530",
-      appId: "1:613440072530:web:1b4d8cdf41a94cc40fe88b"
-    };
-
-    // Ініціалізація Firebase та Firestore
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const provider = new GoogleAuthProvider();
-
-    window.currentUser = null;
-    window.allAds = [];
-    window.currentCategory = 'all';
-
-    // Відстеження кількості зареєстрованих користувачів у реальному часі
-    onSnapshot(collection(db, "users"), (snapshot) => {
-      const count = snapshot.size;
-      document.getElementById('userCount').innerText = count;
-    });
-
-    // Завантаження оголошень з Firestore у реальному часі
-    const q = query(collection(db, "ads"), orderBy("createdAt", "desc"));
-    onSnapshot(q, (snapshot) => {
-      window.allAds = [];
-      snapshot.forEach((docSnap) => {
-        window.allAds.push({ id: docSnap.id, ...docSnap.data() });
-      });
-      filterCategory(window.currentCategory, false);
-    });
-
-    // Відстеження стану входу
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        window.currentUser = user;
-        document.getElementById('authBtn').innerText = `Вийти (${user.displayName || user.email})`;
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background-color: #f4f4f9; 
+        }
+        header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 2px solid #ccc; 
+            padding-bottom: 10px; 
+            margin-bottom: 20px; 
+            background: #012b28;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+        }
+        header h1 { margin: 0; font-size: 1.5rem; }
+        .container { max-width: 900px; margin: 0 auto; }
         
-        try {
-          await setDoc(doc(db, "users", user.uid), {
-            name: user.displayName || user.email.split('@')[0],
-            email: user.email,
-            joinedAt: new Date()
-          }, { merge: true });
-        } catch (e) {
-          console.error("Помилка збереження користувача:", e);
+        /* Авторизація в шапці */
+        .auth-block { display: flex; align-items: center; gap: 10px; }
+        .user-name { font-weight: bold; }
+
+        /* Секція категорій */
+        .categories-section { margin-bottom: 30px; }
+        .categories-section h2 { font-size: 1.4rem; color: #333; margin-bottom: 15px; }
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
         }
-      } else {
-        window.currentUser = null;
-        document.getElementById('authBtn').innerText = 'Увійти / Реєстрація';
-      }
-    });
-
-    // Функція створення нового оголошення в базі даних
-    window.saveNewAdToDB = async function(adData) {
-      try {
-        await addDoc(collection(db, "ads"), {
-          ...adData,
-          createdAt: new Date()
-        });
-        closeModal('addAdModal');
-      } catch (error) {
-        alert("Помилка при збереженні оголошення: " + error.message);
-      }
-    };
-
-    // Вхід через Google
-    window.loginWithGoogle = async function() {
-      try {
-        await signInWithPopup(auth, provider);
-        closeModal('authModal');
-        if (document.getElementById('authAlert').style.display === 'block') {
-          document.getElementById('authAlert').style.display = 'none';
-          openModal('addAdModal');
+        .category-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 15px 10px;
+            background-color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-      } catch (error) {
-        alert("Не вдалося увійти через Google: " + error.message);
-      }
-    };
-
-    // Вхід за поштою та паролем
-    window.loginWithEmail = async function() {
-      const email = document.getElementById('modalEmail').value;
-      const password = document.getElementById('modalPassword').value;
-      if (!email || !password) {
-        alert("Будь ласка, заповніть пошту та пароль.");
-        return;
-      }
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-        closeModal('authModal');
-        if (document.getElementById('authAlert').style.display === 'block') {
-          document.getElementById('authAlert').style.display = 'none';
-          openModal('addAdModal');
+        .category-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
-      } catch (error) {
-        alert("Помилка входу: " + error.message);
-      }
-    };
+        .category-card .icon { font-size: 1.8rem; margin-bottom: 6px; }
+        .category-card h3 { margin: 0; font-size: 0.95rem; font-weight: bold; text-align: center; }
 
-    // Реєстрація за поштою та паролем
-    window.registerWithEmail = async function() {
-      const email = document.getElementById('modalEmail').value;
-      const password = document.getElementById('modalPassword').value;
-      if (!email || !password) {
-        alert("Будь ласка, заповніть пошту та пароль.");
-        return;
-      }
-      if (password.length < 6) {
-        alert("Пароль має містити щонайменше 6 символів.");
-        return;
-      }
-      try {
-        await createUserWithEmailAndPassword(auth, email, password);
-        alert("Акаунт успішно створено!");
-        closeModal('authModal');
-        if (document.getElementById('authAlert').style.display === 'block') {
-          document.getElementById('authAlert').style.display = 'none';
-          openModal('addAdModal');
+        /* Оголошення */
+        .card { 
+            background: white; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-bottom: 15px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
         }
-      } catch (error) {
-        alert("Помилка реєстрації: " + error.message);
-      }
-    };
-
-    // Вихід з акаунту
-    window.logout = function() {
-      signOut(auth).then(() => {
-        alert('Ви успішно вийшли');
-      });
-    };
-  </script>
+        .card img { max-width: 100%; height: auto; border-radius: 6px; margin-top: 10px; }
+        
+        .btn { 
+            background: #00bcd4; 
+            color: #012b28; 
+            border: none; 
+            padding: 8px 15px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .btn:hover { background: #00acc1; color: white; }
+        .btn-danger { background: #ff5252; color: white; }
+    </style>
 </head>
 <body>
 
-  <!-- Header -->
-  <header>
-    <a class="logo" onclick="filterCategory('all')">Тернівка Об'яви</a>
-    <div class="nav-buttons">
-      <!-- Лічильник користувачів -->
-      <div class="user-counter">
-        👥 Користувачів: <span id="userCount">0</span>
-      </div>
-
-      <button class="btn-auth" id="authBtn" onclick="toggleAuth()">Увійти / Реєстрація</button>
-      <button class="btn-add" onclick="handleAddAdClick()">+ Додати оголошення</button>
-    </div>
-  </header>
-
-  <!-- Search -->
-  <div class="search-section">
-    <div class="search-box">
-      <input type="text" id="searchInput" class="search-input" placeholder="Що шукаєте? (напр. Квартира, Авто)..." oninput="searchAds()">
-      <button class="btn-search" onclick="searchAds()">Пошук</button>
-    </div>
-  </div>
-
-  <!-- Main Content -->
-  <container>
-    <!-- Categories -->
-    <div class="categories">
-      <div class="cat-item" onclick="filterCategory('realty')">
-        <div class="cat-icon">🏙️</div>
-        <div class="cat-title">Нерухомість</div>
-      </div>
-      <div class="cat-item" onclick="filterCategory('auto')">
-        <div class="cat-icon">🚗</div>
-        <div class="cat-title">Авто</div>
-      </div>
-      <div class="cat-item" onclick="filterCategory('work')">
-        <div class="cat-icon">💼</div>
-        <div class="cat-title">Робота</div>
-      </div>
-      <div class="cat-item" onclick="filterCategory('electronics')">
-        <div class="cat-icon">📱</div>
-        <div class="cat-title">Електроніка</div>
-      </div>
-      <div class="cat-item" onclick="filterCategory('home_garden')">
-        <div class="cat-icon">🏡</div>
-        <div class="cat-title">Дім та сад</div>
-      </div>
-      <div class="cat-item" onclick="filterCategory('services')">
-        <div class="cat-icon">🛠️</div>
-        <div class="cat-title">Послуги</div>
-      </div>
-      <div class="cat-item" onclick="filterCategory('sport')">
-        <div class="cat-icon">⚽</div>
-        <div class="cat-title">Спорт</div>
-      </div>
-      <div class="cat-item" onclick="filterCategory('other')">
-        <div class="cat-icon">📦</div>
-        <div class="cat-title">Інші оголошення</div>
-      </div>
-      <div class="cat-item" onclick="filterCategory('all')">
-        <div class="cat-icon">📋</div>
-        <div class="cat-title">Усі оголошення</div>
-      </div>
-    </div>
-
-    <!-- Ads List -->
-    <div class="section-title" id="sectionTitle">Усі оголошення</div>
-    <div class="ads-grid" id="adsContainer">
-      <!-- Картки додаватимуться сюди -->
-    </div>
-  </container>
-
-  <!-- Auth Modal -->
-  <div class="modal" id="authModal">
-    <div class="modal-content">
-      <button class="close-btn" onclick="closeModal('authModal')">✕</button>
-      <h2 style="margin-bottom: 15px;">Вхід / Реєстрація</h2>
-      
-      <div class="auth-alert" id="authAlert">
-        Щоб додати оголошення, увійдіть у свій акаунт.
-      </div>
-
-      <!-- Google Auth -->
-      <button class="btn-social btn-google" onclick="window.loginWithGoogle()">
-        🌐 Увійти через Google
-      </button>
-
-      <div class="divider">
-        <span>або через пошту</span>
-      </div>
-
-      <!-- Email / Password Auth Form -->
-      <div class="form-group">
-        <label>Електронна пошта</label>
-        <input type="email" id="modalEmail" placeholder="example@gmail.com">
-      </div>
-      <div class="form-group">
-        <label>Пароль (мін. 6 символів)</label>
-        <input type="password" id="modalPassword" placeholder="••••••">
-      </div>
-
-      <div class="auth-switch-links">
-        <button id="emailLoginBtn" onclick="window.loginWithEmail()">Увійти</button>
-        <button id="emailRegisterBtn" onclick="window.registerWithEmail()">Реєстрація</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Add Ad Modal -->
-  <div class="modal" id="addAdModal">
-    <div class="modal-content">
-      <button class="close-btn" onclick="closeModal('addAdModal')">✕</button>
-      <h2 style="margin-bottom: 20px;">Створити оголошення</h2>
-      <form onsubmit="addNewAd(event)">
-        <div class="form-group">
-          <label>Заголовок</label>
-          <input type="text" id="adTitleInput" required placeholder="Наприклад: Ремонт побутової техніки">
+<div class="container">
+    <header>
+        <h1>📢 Тернівка Об'яви</h1>
+        <div id="auth-container" class="auth-block">
+            <!-- Динамічно заповнюється JS (Кнопка входу або профіль) -->
         </div>
-        <div class="form-group">
-          <label>Категорія</label>
-          <select id="adCategoryInput">
-            <option value="realty">Нерухомість</option>
-            <option value="auto">Авто</option>
-            <option value="work">Робота</option>
-            <option value="electronics">Електроніка</option>
-            <option value="home_garden">Дім та сад</option>
-            <option value="services">Послуги</option>
-            <option value="sport">Спорт</option>
-            <option value="other">Інші оголошення</option>
-          </select>
+    </header>
+
+    <!-- СЕКЦІЯ КАТЕГОРІЙ -->
+    <section class="categories-section">
+        <h2>Категорії оголошень</h2>
+        <div class="categories-grid">
+            <a href="catalog.html?category=realty" class="category-card">
+                <span class="icon">🏙️</span>
+                <h3>Нерухомість</h3>
+            </a>
+            <a href="catalog.html?category=auto" class="category-card">
+                <span class="icon">🚗</span>
+                <h3>Авто</h3>
+            </a>
+            <a href="catalog.html?category=work" class="category-card">
+                <span class="icon">💼</span>
+                <h3>Робота</h3>
+            </a>
+            <a href="catalog.html?category=services" class="category-card">
+                <span class="icon">🛠️</span>
+                <h3>Послуги</h3>
+            </a>
+            <a href="catalog.html?category=electronics" class="category-card">
+                <span class="icon">📱</span>
+                <h3>Електроніка</h3>
+            </a>
+            <a href="catalog.html?category=home" class="category-card">
+                <span class="icon">🏡</span>
+                <h3>Дім та сад</h3>
+            </a>
+            <a href="catalog.html?category=sport" class="category-card">
+                <span class="icon">⚽</span>
+                <h3>Спорт</h3>
+            </a>
+            <a href="catalog.html?category=other" class="category-card">
+                <span class="icon">📦</span>
+                <h3>Інші</h3>
+            </a>
         </div>
-        <div class="form-group">
-          <label>Ціна (грн)</label>
-          <input type="number" id="adPriceInput" required placeholder="1000">
-        </div>
-        <div class="form-group">
-          <label>Посилання на фото (URL)</label>
-          <input type="url" id="adImgInput" placeholder="https://images.unsplash.com/photo-...">
-        </div>
-        <button type="submit" class="btn-submit">Опублікувати</button>
-      </form>
-    </div>
-  </div>
+    </section>
 
-  <script>
-    function renderAds(list) {
-      const container = document.getElementById('adsContainer');
-      container.innerHTML = '';
-      
-      if (list.length === 0) {
-        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #7f9799; padding: 40px 0; font-size: 16px;">Оголошень поки немає. Будьте першим, хто додасть оголошення!</p>';
-        return;
-      }
+    <!-- СЕКЦІЯ ОСТАННІХ ОГОЛОШЕНЬ -->
+    <h2>Усі оголошення</h2>
+    <div id="ads-container">Завантаження оголошень...</div>
+</div>
 
-      list.forEach(ad => {
-        const defaultImg = 'https://via.placeholder.com/300x200?text=Немає+фото';
-        const card = `
-          <div class="ad-card">
-            <img class="ad-img" src="${ad.img || defaultImg}" alt="${ad.title}" onerror="this.src='${defaultImg}'">
-            <div class="ad-info">
-              <div>
-                <div class="ad-title">${ad.title}</div>
-                <div class="ad-price">${ad.price}</div>
-              </div>
-              <div class="ad-date">Щойно</div>
-            </div>
-          </div>
-        `;
-        container.innerHTML += card;
-      });
+<script>
+    // ⚠️ Вставте сюди ваші реальні конфігураційні дані з Firebase Console
+    const firebaseConfig = {
+        apiKey: "ВАШ_API_KEY",
+        authDomain: "ВАШ_AUTH_DOMAIN",
+        projectId: "ternivka-obyavy",
+        storageBucket: "ВАШ_STORAGE_BUCKET",
+        messagingSenderId: "ВАШ_MESSAGING_SENDER_ID",
+        appId: "ВАШ_APP_ID"
+    };
+
+    // Ініціалізація Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Логіка Google Auth та шапки сайту
+    const provider = new firebase.auth.GoogleAuthProvider();
+
+    function loginWithGoogle() {
+        auth.signInWithPopup(provider).catch((error) => {
+            console.error("Помилка входу:", error);
+        });
     }
 
-    function handleAddAdClick() {
-      if (!window.currentUser) {
-        document.getElementById('authAlert').style.display = 'block';
-        openModal('authModal');
-      } else {
-        openModal('addAdModal');
-      }
+    function logout() {
+        auth.signOut();
     }
 
-    function toggleAuth() {
-      if (window.currentUser) {
-        window.logout();
-      } else {
-        document.getElementById('authAlert').style.display = 'none';
-        openModal('authModal');
-      }
+    auth.onAuthStateChanged((user) => {
+        const authContainer = document.getElementById('auth-container');
+        if (user) {
+            authContainer.innerHTML = `
+                <span class="user-name">${user.displayName || user.email}</span>
+                <a href="cabinet.html" class="btn">Мій кабінет</a>
+                <button class="btn btn-danger" onclick="logout()">Вийти</button>
+            `;
+        } else {
+            authContainer.innerHTML = `
+                <button class="btn" onclick="loginWithGoogle()">Увійти через Google</button>
+            `;
+        }
+    });
+
+    // Завантаження оголошень із Firestore
+    async function fetchAds() {
+        const container = document.getElementById('ads-container');
+        try {
+            const querySnapshot = await db.collection('announcements').orderBy('createdAt', 'desc').get();
+            
+            if (querySnapshot.empty) {
+                container.innerHTML = '<p>Оголошень поки немає.</p>';
+                return;
+            }
+
+            let html = '';
+            querySnapshot.forEach((doc) => {
+                const ad = doc.data();
+                html += `
+                    <div class="card">
+                        <h3>${escapeHtml(ad.title)}</h3>
+                        <p>${escapeHtml(ad.description)}</p>
+                        ${ad.imageUrl ? `<img src="${ad.imageUrl}" alt="Фото">` : ''}
+                        <p><strong>Ціна:</strong> ${ad.price ? escapeHtml(ad.price) + ' грн' : 'Договірна'}</p>
+                        <p><strong>Телефон:</strong> ${escapeHtml(ad.phone || 'Не вказано')}</p>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        } catch (error) {
+            container.innerHTML = '<p>Помилка завантаження оголошень.</p>';
+            console.error(error);
+        }
     }
 
-    function filterCategory(cat, updateGlobal = true) {
-      if (updateGlobal) window.currentCategory = cat;
-      
-      const adsToFilter = window.allAds || [];
-      
-      if (cat === 'all') {
-        document.getElementById('sectionTitle').innerText = "Усі оголошення";
-        renderAds(adsToFilter);
-      } else {
-        const names = { 
-          realty: 'Нерухомість', 
-          auto: 'Авто', 
-          work: 'Робота', 
-          electronics: 'Електроніка',
-          home_garden: 'Дім та сад',
-          services: 'Послуги',
-          sport: 'Спорт',
-          other: 'Інші оголошення'
-        };
-        document.getElementById('sectionTitle').innerText = "Категорія: " + names[cat];
-        const filtered = adsToFilter.filter(a => a.category === cat);
-        renderAds(filtered);
-      }
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
-    function searchAds() {
-      const query = document.getElementById('searchInput').value.toLowerCase();
-      const adsToSearch = window.allAds || [];
-      const filtered = adsToSearch.filter(a => a.title.toLowerCase().includes(query));
-      renderAds(filtered);
-    }
+    fetchAds();
+</script>
 
-    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-    function addNewAd(e) {
-      e.preventDefault();
-      const title = document.getElementById('adTitleInput').value;
-      const category = document.getElementById('adCategoryInput').value;
-      const price = document.getElementById('adPriceInput').value + ' грн';
-      const img = document.getElementById('adImgInput').value;
-
-      const newAd = {
-        title: title,
-        price: price,
-        category: category,
-        img: img,
-        userEmail: window.currentUser ? window.currentUser.email : 'Anonymous'
-      };
-
-      window.saveNewAdToDB(newAd);
-      e.target.reset();
-    }
-  </script>
 </body>
 </html>

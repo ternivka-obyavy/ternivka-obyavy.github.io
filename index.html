@@ -1,387 +1,192 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Тернівка Об'яви — Особистий кабінет</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f9; }
-    header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
-    
-    .container { max-width: 800px; margin: 20px auto; }
-    .card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
-    
-    .btn { background: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-    .btn:hover { background: #0056b3; }
-    .btn-secondary { background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-    .btn-secondary:hover { background: #5a6268; }
-    .btn-danger { background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-    .btn-danger:hover { background: #bd2130; }
-    
-    .form-container { background: white; padding: 20px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-    .form-group input, .form-group textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-    
-    .auth-box { display: flex; gap: 10px; align-items: center; }
-    .hidden { display: none; }
-    
-    .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-    .tab-btn { background: #e9ecef; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-    .tab-btn.active { background: #007bff; color: white; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тернівка Об'яви - Головна</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background-color: #f4f4f9; 
+        }
+        header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 2px solid #ccc; 
+            padding-bottom: 10px; 
+            margin-bottom: 20px; 
+        }
+        .container { 
+            max-width: 900px; 
+            margin: 0 auto; 
+        }
+        
+        /* Секція категорій */
+        .categories-section {
+            margin-bottom: 30px;
+        }
+        .categories-section h2 {
+            font-size: 1.4rem;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+        }
+        .category-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 15px 10px;
+            background-color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+        }
+        .category-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .category-card .icon {
+            font-size: 1.8rem;
+            margin-bottom: 6px;
+        }
+        .category-card h3 {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: bold;
+            text-align: center;
+        }
 
-    .avatar-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #007bff; }
-    .profile-avatar-preview { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid #007bff; }
-    .avatar-upload-box { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
-  </style>
+        /* Оголошення */
+        .card { 
+            background: white; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-bottom: 15px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+        }
+        .card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+        .btn { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 8px 15px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover { 
+            background: #0056b3; 
+        }
+    </style>
 </head>
 <body>
 
-  <header>
-    <h1>📢 Тернівка Об'яви</h1>
-    <div id="authSection">
-      <div id="guestBlock" class="auth-box">
-        <button class="btn" onclick="toggleAuthForm('login')">Увійти</button>
-        <button class="btn btn-secondary" onclick="toggleAuthForm('register')">Реєстрація</button>
-      </div>
-      <div id="userBlock" class="auth-box hidden">
-        <img id="headerAvatar" src="https://via.placeholder.com/40" class="avatar-img" alt="Avatar">
-        <span id="userEmail"></span>
-        <button class="btn btn-secondary" onclick="logout()">Вийти</button>
-      </div>
-    </div>
-  </header>
-
-  <div class="container">
-
-    <div id="authFormContainer" class="form-container hidden">
-      <h2 id="authTitle">Реєстрація</h2>
-      <form id="authForm">
-        <div class="form-group">
-          <label for="authEmail">Email:</label>
-          <input type="email" id="authEmail" required placeholder="your@email.com">
+<div class="container">
+    <header>
+        <h1>Тернівка Об'яви</h1>
+        <div id="user-info">
+            <!-- Кнопка Telegram авторизації згенерується автоматично -->
         </div>
-        <div class="form-group">
-          <label for="authPassword">Пароль:</label>
-          <input type="password" id="authPassword" required placeholder="Мінімум 6 символів">
+    </header>
+
+    <!-- СЕКЦІЯ КАТЕГОРІЙ -->
+    <section class="categories-section">
+        <h2>Категорії оголошень</h2>
+        <div class="categories-grid">
+            <a href="catalog.html?category=realty" class="category-card">
+                <span class="icon">🏠</span>
+                <h3>Нерухомість</h3>
+            </a>
+            <a href="catalog.html?category=auto" class="category-card">
+                <span class="icon">🚗</span>
+                <h3>Авто</h3>
+            </a>
+            <a href="catalog.html?category=work" class="category-card">
+                <span class="icon">💼</span>
+                <h3>Робота</h3>
+            </a>
+            <a href="catalog.html?category=services" class="category-card">
+                <span class="icon">🛠️</span>
+                <h3>Послуги</h3>
+            </a>
+            <a href="catalog.html?category=electronics" class="category-card">
+                <span class="icon">📱</span>
+                <h3>Електроніка</h3>
+            </a>
+            <a href="catalog.html?category=home" class="category-card">
+                <span class="icon">🛋️</span>
+                <h3>Дім і сад</h3>
+            </a>
         </div>
-        <button type="submit" id="authSubmitBtn" class="btn">Зареєструватися</button>
-        <button type="button" class="btn btn-secondary" onclick="toggleAuthForm()">Скасувати</button>
-      </form>
-    </div>
+    </section>
 
-    <div class="nav-tabs">
-      <button class="tab-btn active" id="tabAllBtn" onclick="switchTab('all')">Усі оголошення</button>
-      <button class="tab-btn hidden" id="tabMyBtn" onclick="switchTab('my')">👤 Мій кабінет / Мої оголошення</button>
-    </div>
+    <!-- СЕКЦІЯ ОСТАННІХ ОГОЛОШЕНЬ -->
+    <h2>Останні оголошення</h2>
+    <div id="ads-container">Завантаження оголошень...</div>
+</div>
 
-    <div id="allSection">
-      <!-- Повідомлення для гостей -->
-      <div id="guestNotice" class="form-container">
-        <p style="margin: 0;">ℹ️ Щоб додати власне оголошення, будь ласка, <strong>увійдіть</strong> або <strong>зареєструйтесь</strong>.</p>
-      </div>
-
-      <!-- Форма додавання (доступна тільки авторизованим) -->
-      <div id="addCardContainer" class="form-container hidden">
-        <h2>+ Додати нове оголошення</h2>
-        <form id="addCardForm">
-          <div class="form-group">
-            <label for="title">Заголовок оголошення:</label>
-            <input type="text" id="title" required placeholder="Наприклад: Продам велосипед">
-          </div>
-          <div class="form-group">
-            <label for="description">Опис:</label>
-            <textarea id="description" rows="3" required placeholder="Опишіть ваш товар або послугу..."></textarea>
-          </div>
-          <div class="form-group">
-            <label for="price">Ціна:</label>
-            <input type="text" id="price" required placeholder="Наприклад: 3000 грн або Договірна">
-          </div>
-          <div class="form-group">
-            <label for="phone">Номер телефону:</label>
-            <input type="text" id="phone" required placeholder="099-XXX-XX-XX">
-          </div>
-          <button type="submit" class="btn">Опублікувати оголошення</button>
-        </form>
-      </div>
-
-      <h2>Останні оголошення</h2>
-      <div id="announcementsList"></div>
-    </div>
-
-    <div id="mySection" class="hidden">
-      <div class="form-container">
-        <h2>👤 Особистий кабінет</h2>
-        
-        <div class="avatar-upload-box">
-          <img id="profileAvatar" src="https://via.placeholder.com/90" class="profile-avatar-preview" alt="Аватар">
-          <div>
-            <label><strong>Завантажити новий аватар:</strong></label><br><br>
-            <input type="file" id="avatarInput" accept="image/*" onchange="uploadAvatar()">
-          </div>
-        </div>
-
-        <p><strong>Ваш Email:</strong> <span id="profileEmail">-</span></p>
-        <p><strong>ID користувача:</strong> <span id="profileId">-</span></p>
-      </div>
-
-      <h2>Мої оголошення</h2>
-      <div id="myAnnouncementsList"></div>
-    </div>
-
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
+<script>
+    // Ініціалізація Supabase
     const SUPABASE_URL = 'https://lpocqhvozuugcnzgquiu.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_ybld3op1Zra4aqnNEykSiw__28Xp-dC';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // Замініть на свій anon key
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let currentUser = null;
-    let authMode = 'register';
-    const DEFAULT_AVATAR = 'https://via.placeholder.com/90?text=Avatar';
+    // Завантаження оголошень з БД
+    async function fetchAds() {
+        const container = document.getElementById('ads-container');
+        const { data: ads, error } = await supabase
+            .from('ads')
+            .select('*')
+            .order('created_at', { ascending: false });
 
-    async function checkUser() {
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      currentUser = user;
-
-      const guestBlock = document.getElementById('guestBlock');
-      const userBlock = document.getElementById('userBlock');
-      const tabMyBtn = document.getElementById('tabMyBtn');
-      const addCardContainer = document.getElementById('addCardContainer');
-      const guestNotice = document.getElementById('guestNotice');
-
-      if (user) {
-        guestBlock.classList.add('hidden');
-        userBlock.classList.remove('hidden');
-        tabMyBtn.classList.remove('hidden');
-        addCardContainer.classList.remove('hidden');
-        guestNotice.classList.add('hidden');
-        
-        document.getElementById('userEmail').textContent = user.email;
-        document.getElementById('profileEmail').textContent = user.email;
-        document.getElementById('profileId').textContent = user.id;
-
-        loadUserAvatar();
-      } else {
-        guestBlock.classList.remove('hidden');
-        userBlock.classList.add('hidden');
-        tabMyBtn.classList.add('hidden');
-        addCardContainer.classList.add('hidden');
-        guestNotice.classList.remove('hidden');
-        switchTab('all');
-      }
-    }
-
-    async function loadUserAvatar() {
-      if (!currentUser) return;
-      const avatarUrl = currentUser.user_metadata?.avatar_url || DEFAULT_AVATAR;
-      document.getElementById('headerAvatar').src = avatarUrl;
-      document.getElementById('profileAvatar').src = avatarUrl;
-    }
-
-    async function uploadAvatar() {
-      const fileInput = document.getElementById('avatarInput');
-      if (!fileInput.files || fileInput.files.length === 0) return;
-
-      const file = fileInput.files[0];
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${currentUser.id}/avatar.${fileExt}`;
-
-      const { data, error } = await supabaseClient.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
-
-      if (error) {
-        alert('Помилка завантаження фото: ' + error.message);
-        return;
-      }
-
-      const { data: publicUrlData } = supabaseClient.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      const publicUrl = publicUrlData.publicUrl + '?t=' + new Date().getTime();
-
-      const { error: updateError } = await supabaseClient.auth.updateUser({
-        data: { avatar_url: publicUrl }
-      });
-
-      if (updateError) {
-        alert('Помилка оновлення профілю: ' + updateError.message);
-      } else {
-        alert('Аватарку успішно оновлено!');
-        checkUser();
-      }
-    }
-
-    function switchTab(tab) {
-      const allSection = document.getElementById('allSection');
-      const mySection = document.getElementById('mySection');
-      const tabAllBtn = document.getElementById('tabAllBtn');
-      const tabMyBtn = document.getElementById('tabMyBtn');
-
-      if (tab === 'all') {
-        allSection.classList.remove('hidden');
-        mySection.classList.add('hidden');
-        tabAllBtn.classList.add('active');
-        tabMyBtn.classList.remove('active');
-        loadAnnouncements();
-      } else {
-        allSection.classList.add('hidden');
-        mySection.classList.remove('hidden');
-        tabAllBtn.classList.remove('active');
-        tabMyBtn.classList.add('active');
-        loadMyAnnouncements();
-      }
-    }
-
-    function toggleAuthForm(mode) {
-      const container = document.getElementById('authFormContainer');
-      if (!mode) {
-        container.classList.add('hidden');
-        return;
-      }
-      authMode = mode;
-      document.getElementById('authTitle').textContent = mode === 'register' ? 'Реєстрація' : 'Вхід у кабінет';
-      document.getElementById('authSubmitBtn').textContent = mode === 'register' ? 'Зареєструватися' : 'Увійти';
-      container.classList.remove('hidden');
-    }
-
-    document.getElementById('authForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('authEmail').value;
-      const password = document.getElementById('authPassword').value;
-
-      if (authMode === 'register') {
-        const { data, error } = await supabaseClient.auth.signUp({ email, password });
-        if (error) alert('Помилка: ' + error.message);
-        else {
-          alert('Реєстрація успішна!');
-          toggleAuthForm();
-          checkUser();
+        if (error) {
+            container.innerHTML = '<p>Помилка завантаження оголошень.</p>';
+            console.error(error);
+            return;
         }
-      } else {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) alert('Помилка входу: ' + error.message);
-        else {
-          alert('Ви успішно увійшли!');
-          toggleAuthForm();
-          checkUser();
+
+        if (!ads || ads.length === 0) {
+            container.innerHTML = '<p>Оголошень поки немає.</p>';
+            return;
         }
-      }
-    });
 
-    async function logout() {
-      await supabaseClient.auth.signOut();
-      checkUser();
+        container.innerHTML = ads.map(ad => `
+            <div class="card">
+                <h3>${escapeHtml(ad.title)}</h3>
+                <p>${escapeHtml(ad.description)}</p>
+                ${ad.image_url ? `<img src="${ad.image_url}" alt="${escapeHtml(ad.title)}">` : ''}
+                <p><strong>Ціна:</strong> ${ad.price ? ad.price + ' грн' : 'Договірна'}</p>
+                <small>Опубліковано: ${new Date(ad.created_at).toLocaleDateString('uk-UA')}</small>
+            </div>
+        `).join('');
     }
 
-    async function loadAnnouncements() {
-      const { data, error } = await supabaseClient
-        .from('announcements')
-        .select('*')
-        .order('id', { ascending: false });
-
-      const listDiv = document.getElementById('announcementsList');
-      listDiv.innerHTML = '';
-
-      if (error || !data || data.length === 0) {
-        listDiv.innerHTML = '<p>Поки немає оголошень.</p>';
-        return;
-      }
-
-      data.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <h3>${item.title || 'Без назви'}</h3>
-          <p>${item.description || ''}</p>
-          <p><strong>Ціна:</strong> ${item.price || 'Не вказана'}</p>
-          <p><strong>Тел:</strong> ${item.phone || 'Не вказаний'}</p>
-        `;
-        listDiv.appendChild(card);
-      });
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
-    async function loadMyAnnouncements() {
-      if (!currentUser) return;
-
-      const { data, error } = await supabaseClient
-        .from('announcements')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .order('id', { ascending: false });
-
-      const listDiv = document.getElementById('myAnnouncementsList');
-      listDiv.innerHTML = '';
-
-      if (error || !data || data.length === 0) {
-        listDiv.innerHTML = '<p>У вас ще немає доданих оголошень.</p>';
-        return;
-      }
-
-      data.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <h3>${item.title || 'Без назви'}</h3>
-          <p>${item.description || ''}</p>
-          <p><strong>Ціна:</strong> ${item.price || 'Не вказана'}</p>
-          <p><strong>Тел:</strong> ${item.phone || 'Не вказаний'}</p>
-          <button class="btn btn-danger" onclick="deleteAnnouncement(${item.id})">Видалити оголошення</button>
-        `;
-        listDiv.appendChild(card);
-      });
-    }
-
-    async function deleteAnnouncement(id) {
-      if (!confirm('Ви дійсно хочете видалити це оголошення?')) return;
-
-      const { error } = await supabaseClient
-        .from('announcements')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        alert('Помилка видалення!');
-        console.error(error);
-      } else {
-        alert('Оголошення видалено!');
-        loadMyAnnouncements();
-      }
-    }
-
-    document.getElementById('addCardForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const title = document.getElementById('title').value;
-      const description = document.getElementById('description').value;
-      const price = document.getElementById('price').value;
-      const phone = document.getElementById('phone').value;
-
-      const payload = { title, description, price, phone };
-      if (currentUser) {
-        payload.user_id = currentUser.id;
-      }
-
-      const { error } = await supabaseClient
-        .from('announcements')
-        .insert([payload]);
-
-      if (error) {
-        alert('Помилка збереження!');
-        console.error(error);
-      } else {
-        alert('Оголошення успішно додано!');
-        document.getElementById('addCardForm').reset();
-        loadAnnouncements();
-      }
-    });
-
-    checkUser();
-    loadAnnouncements();
-  </script>
+    // Запуск завантаження при відкритті сторінки
+    fetchAds();
+</script>
 
 </body>
 </html>

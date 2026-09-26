@@ -11,25 +11,55 @@
     .card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .btn { background: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
     .btn:hover { background: #0056b3; }
+    .btn-secondary { background: #6c757d; }
+    .btn-secondary:hover { background: #5a6268; }
     
-    /* Стилі для форми додавання */
     .form-container { background: white; padding: 20px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
     .form-group input, .form-group textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+    
+    .auth-box { display: flex; gap: 10px; align-items: center; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
 
   <header>
     <h1>📢 Тернівка Об'яви</h1>
-    <div>
-      <button class="btn">Увійти</button>
+    <div id="authSection">
+      <!-- Блок для неавторизованого користувача -->
+      <div id="guestBlock" class="auth-box">
+        <button class="btn" onclick="toggleAuthForm('login')">Увійти</button>
+        <button class="btn btn-secondary" onclick="toggleAuthForm('register')">Реєстрація</button>
+      </div>
+      <!-- Блок для авторизованого користувача -->
+      <div id="userBlock" class="auth-box hidden">
+        <span id="userEmail"></span>
+        <button class="btn btn-secondary" onclick="logout()">Вийти</button>
+      </div>
     </div>
   </header>
 
   <div class="container">
-    
+
+    <!-- Форма Авторизації / Реєстрації -->
+    <div id="authFormContainer" class="form-container hidden">
+      <h2 id="authTitle">Реєстрація</h2>
+      <form id="authForm">
+        <div class="form-group">
+          <label for="authEmail">Email:</label>
+          <input type="email" id="authEmail" required placeholder="your@email.com">
+        </div>
+        <div class="form-group">
+          <label for="authPassword">Пароль:</label>
+          <input type="password" id="authPassword" required placeholder="Мінімум 6 символів">
+        </div>
+        <button type="submit" id="authSubmitBtn" class="btn">Зареєструватися</button>
+        <button type="button" class="btn btn-secondary" onclick="toggleAuthForm()">Скасувати</button>
+      </form>
+    </div>
+
     <!-- Форма додавання оголошення -->
     <div class="form-container">
       <h2>+ Додати нове оголошення</h2>
@@ -56,7 +86,7 @@
 
     <h2>Останні оголошення</h2>
     <div id="announcementsList">
-      <!-- Оголошення будуть завантажуватися сюди з бази Supabase -->
+      <!-- Оголошення будуть завантажуватися сюди -->
     </div>
 
   </div>
@@ -64,12 +94,76 @@
   <!-- Підключення Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // Налаштування Supabase
     const SUPABASE_URL = 'https://lpocqhvozuugcnzgquiu.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_ybld3op1Zra4aqnNEykSiw__28Xp-dC';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Функція для завантаження оголошень з бази
+    let authMode = 'register'; // 'register' або 'login'
+
+    // Перевірка стану входу користувача
+    async function checkUser() {
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      const guestBlock = document.getElementById('guestBlock');
+      const userBlock = document.getElementById('userBlock');
+      const userEmail = document.getElementById('userEmail');
+
+      if (user) {
+        guestBlock.classList.add('hidden');
+        userBlock.classList.remove('hidden');
+        userEmail.textContent = user.email;
+      } else {
+        guestBlock.classList.remove('hidden');
+        userBlock.classList.add('hidden');
+      }
+    }
+
+    // Показувати/ховати форму авторизації
+    function toggleAuthForm(mode) {
+      const container = document.getElementById('authFormContainer');
+      if (!mode) {
+        container.classList.add('hidden');
+        return;
+      }
+      authMode = mode;
+      document.getElementById('authTitle').textContent = mode === 'register' ? 'Реєстрація' : 'Вхід у кабінет';
+      document.getElementById('authSubmitBtn').textContent = mode === 'register' ? 'Зареєструватися' : 'Увійти';
+      container.classList.remove('hidden');
+    }
+
+    // Обробка реєстрації/входу
+    document.getElementById('authForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('authEmail').value;
+      const password = document.getElementById('authPassword').value;
+
+      if (authMode === 'register') {
+        const { data, error } = await supabaseClient.auth.signUp({ email, password });
+        if (error) {
+          alert('Помилка реєстрації: ' + error.message);
+        } else {
+          alert('Реєстрація успішна! Якщо увімкнено підтвердження пошти, перевірте ваш email.');
+          toggleAuthForm();
+          checkUser();
+        }
+      } else {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) {
+          alert('Помилка входу: ' + error.message);
+        } else {
+          alert('Ви успішно увійшли!');
+          toggleAuthForm();
+          checkUser();
+        }
+      }
+    });
+
+    // Вихід з акаунту
+    async function logout() {
+      await supabaseClient.auth.signOut();
+      checkUser();
+    }
+
+    // Завантаження оголошень з бази
     async function loadAnnouncements() {
       const { data, error } = await supabaseClient
         .from('announcements')
@@ -102,7 +196,7 @@
       });
     }
 
-    // Обробка відправки форми
+    // Обробка відправки форми оголошення
     document.getElementById('addCardForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -121,11 +215,12 @@
       } else {
         alert('Оголошення успішно додано!');
         document.getElementById('addCardForm').reset();
-        loadAnnouncements(); // Оновлюємо список
+        loadAnnouncements();
       }
     });
 
-    // Завантажуємо оголошення при відкритті сторінки
+    // Ініціалізація сторінки
+    checkUser();
     loadAnnouncements();
   </script>
 

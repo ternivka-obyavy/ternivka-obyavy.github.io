@@ -9,12 +9,12 @@
     body { background-color: #f2f4f5; color: #002f34; }
 
     /* Header */
-    header { background-color: #002f34; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; color: white; }
+    header { background-color: #002f34; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; color: white; flex-wrap: wrap; gap: 10px; }
     .logo { font-size: 24px; font-weight: bold; color: #23e5bf; text-decoration: none; cursor: pointer; }
-    .nav-buttons { display: flex; gap: 15px; align-items: center; }
+    .nav-buttons { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
     
     /* Counter Badge */
-    .user-counter { background-color: rgba(255, 255, 255, 0.15); color: #23e5bf; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .user-counter { background-color: rgba(255, 255, 255, 0.15); color: #23e5bf; padding: 6px 14px; border-radius: 20px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
     .user-counter span { color: white; font-weight: bold; }
 
     .btn-auth { background: transparent; color: white; border: none; font-weight: 600; cursor: pointer; font-size: 15px; }
@@ -81,7 +81,7 @@
       appId: "1:613440072530:web:1b4d8cdf41a94cc40fe88b"
     };
 
-    // Ініціалізація Firebase та Firestore
+    // Ініціалізація
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
@@ -89,27 +89,26 @@
 
     window.currentUser = null;
 
-    // Відстеження кількості зареєстрованих користувачів у реальному часі
+    // Відстеження кількості унікальних користувачів у реальному часі з бази Firestore
     onSnapshot(collection(db, "users"), (snapshot) => {
-      const count = snapshot.size;
-      document.getElementById('userCount').innerText = count;
+      document.getElementById('userCount').innerText = snapshot.size;
     });
 
-    // Відстеження стану входу
+    // Автоматичне збереження будь-якого авторизованого користувача в базу (і Google, і Email)
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         window.currentUser = user;
         document.getElementById('authBtn').innerText = `Вийти (${user.displayName || user.email})`;
         
-        // Зберігаємо користувача в базу даних, якщо його ще немає
         try {
           await setDoc(doc(db, "users", user.uid), {
-            name: user.displayName || "Користувач",
+            uid: user.uid,
             email: user.email,
-            joinedAt: new Date()
+            name: user.displayName || user.email.split('@')[0],
+            lastLogin: new Date()
           }, { merge: true });
         } catch (e) {
-          console.error("Помилка збереження користувача:", e);
+          console.error("Помилка запису користувача:", e);
         }
       } else {
         window.currentUser = null;
@@ -128,14 +127,14 @@
         }
       } catch (error) {
         console.error("Помилка авторизації:", error);
-        alert("Не вдалося увійти через Google: " + error.message);
+        alert("Помилка входу: " + error.message);
       }
     };
 
-    // Вихід з акаунту
+    // Вихід
     window.logout = function() {
       signOut(auth).then(() => {
-        alert('Ви успішно вийшли');
+        alert('Ви успішно вийшли з акаунту');
       });
     };
   </script>
@@ -146,9 +145,9 @@
   <header>
     <a class="logo" onclick="filterCategory('all')">Тернівка Об'яви</a>
     <div class="nav-buttons">
-      <!-- Лічильник користувачів -->
+      <!-- Лічильник усіх зареєстрованих користувачів -->
       <div class="user-counter">
-        👥 Користувачів: <span id="userCount">0</span>
+        👥 Зареєстровано: <span id="userCount">0</span>
       </div>
 
       <button class="btn-auth" id="authBtn" onclick="toggleAuth()">Увійти / Реєстрація</button>

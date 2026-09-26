@@ -1,49 +1,133 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Тернівка Об'яви</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f9; }
-        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
-        .container { max-width: 800px; margin: 20px auto; }
-        .card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .btn { background: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-        .btn:hover { background: #0056b3; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тернівка Об'яви</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f9; }
+    header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
+    .container { max-width: 800px; margin: 20px auto; }
+    .card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .btn { background: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+    .btn:hover { background: #0056b3; }
+    
+    /* Стилі для форми додавання */
+    .form-container { background: white; padding: 20px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+    .form-group input, .form-group textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+  </style>
 </head>
 <body>
 
-    <header>
-        <h1>📢 Тернівка Об'яви</h1>
-        <div>
-            <button class="btn">Увійти</button>
-            <button class="btn">+ Додати оголошення</button>
-        </div>
-    </header>
-
-    <div class="container">
-        <h2>Останні оголошення</h2>
-        
-        <div class="card">
-            <h3>Продам велосипед</h3>
-            <p>Стан чудовий, ціна 3000 грн. Звертатись за телефоном 099-XXX-XX-XX.</p>
-        </div>
-
-        <div class="card">
-            <h3>Оренда квартири</h3>
-            <p>Здам 2-кімнатну квартиру в центрі міста. Деталі в приватні повідомлення.</p>
-        </div>
+  <header>
+    <h1>📢 Тернівка Об'яви</h1>
+    <div>
+      <button class="btn">Увійти</button>
     </div>
-<!-- Підключення Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </header>
 
-<script>
-  const SUPABASE_URL = 'https://lpocqhvozuugcnzgquiu.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_ybld3op1Zra4aqnNEykSiw__28Xp-dC';
-  
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-</script>
+  <div class="container">
+    
+    <!-- Форма додавання оголошення -->
+    <div class="form-container">
+      <h2>+ Додати нове оголошення</h2>
+      <form id="addCardForm">
+        <div class="form-group">
+          <label for="title">Заголовок оголошення:</label>
+          <input type="text" id="title" required placeholder="Наприклад: Продам велосипед">
+        </div>
+        <div class="form-group">
+          <label for="description">Опис:</label>
+          <textarea id="description" rows="3" required placeholder="Опишіть ваш товар або послугу..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="price">Ціна:</label>
+          <input type="text" id="price" required placeholder="Наприклад: 3000 грн або Договірна">
+        </div>
+        <div class="form-group">
+          <label for="phone">Номер телефону:</label>
+          <input type="text" id="phone" required placeholder="099-XXX-XX-XX">
+        </div>
+        <button type="submit" class="btn">Опублікувати оголошення</button>
+      </form>
+    </div>
+
+    <h2>Останні оголошення</h2>
+    <div id="announcementsList">
+      <!-- Оголошення будуть завантажуватися сюди з бази Supabase -->
+    </div>
+
+  </div>
+
+  <!-- Підключення Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // Налаштування Supabase
+    const SUPABASE_URL = 'https://lpocqhvozuugcnzgquiu.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_ybld3op1Zra4aqnNEykSiw__28Xp-dC';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Функція для завантаження оголошень з бази
+    async function loadAnnouncements() {
+      const { data, error } = await supabaseClient
+        .from('announcements')
+        .select('*')
+        .order('id', { ascending: false });
+
+      if (error) {
+        console.error('Помилка завантаження:', error);
+        return;
+      }
+
+      const listDiv = document.getElementById('announcementsList');
+      listDiv.innerHTML = '';
+
+      if (data.length === 0) {
+        listDiv.innerHTML = '<p>Поки немає оголошень. Будьте першим, хто додасть!</p>';
+        return;
+      }
+
+      data.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <h3>${item.title || 'Без назви'}</h3>
+          <p>${item.description || ''}</p>
+          <p><strong>Ціна:</strong> ${item.price || 'Не вказана'}</p>
+          <p><strong>Тел:</strong> ${item.phone || 'Не вказаний'}</p>
+        `;
+        listDiv.appendChild(card);
+      });
+    }
+
+    // Обробка відправки форми
+    document.getElementById('addCardForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const title = document.getElementById('title').value;
+      const description = document.getElementById('description').value;
+      const price = document.getElementById('price').value;
+      const phone = document.getElementById('phone').value;
+
+      const { data, error } = await supabaseClient
+        .from('announcements')
+        .insert([{ title, description, price, phone }]);
+
+      if (error) {
+        alert('Помилка при збереженні оголошення!');
+        console.error(error);
+      } else {
+        alert('Оголошення успішно додано!');
+        document.getElementById('addCardForm').reset();
+        loadAnnouncements(); // Оновлюємо список
+      }
+    });
+
+    // Завантажуємо оголошення при відкритті сторінки
+    loadAnnouncements();
+  </script>
+
 </body>
 </html>

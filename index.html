@@ -30,7 +30,6 @@
     .tab-btn { background: #e9ecef; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
     .tab-btn.active { background: #007bff; color: white; }
 
-    /* Аватарки */
     .avatar-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #007bff; }
     .profile-avatar-preview { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid #007bff; }
     .avatar-upload-box { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
@@ -77,7 +76,13 @@
     </div>
 
     <div id="allSection">
-      <div class="form-container">
+      <!-- Повідомлення для гостей -->
+      <div id="guestNotice" class="form-container">
+        <p style="margin: 0;">ℹ️ Щоб додати власне оголошення, будь ласка, <strong>увійдіть</strong> або <strong>зареєструйтесь</strong>.</p>
+      </div>
+
+      <!-- Форма додавання (доступна тільки авторизованим) -->
+      <div id="addCardContainer" class="form-container hidden">
         <h2>+ Додати нове оголошення</h2>
         <form id="addCardForm">
           <div class="form-group">
@@ -143,11 +148,15 @@
       const guestBlock = document.getElementById('guestBlock');
       const userBlock = document.getElementById('userBlock');
       const tabMyBtn = document.getElementById('tabMyBtn');
+      const addCardContainer = document.getElementById('addCardContainer');
+      const guestNotice = document.getElementById('guestNotice');
 
       if (user) {
         guestBlock.classList.add('hidden');
         userBlock.classList.remove('hidden');
         tabMyBtn.classList.remove('hidden');
+        addCardContainer.classList.remove('hidden');
+        guestNotice.classList.add('hidden');
         
         document.getElementById('userEmail').textContent = user.email;
         document.getElementById('profileEmail').textContent = user.email;
@@ -158,6 +167,8 @@
         guestBlock.classList.remove('hidden');
         userBlock.classList.add('hidden');
         tabMyBtn.classList.add('hidden');
+        addCardContainer.classList.add('hidden');
+        guestNotice.classList.remove('hidden');
         switchTab('all');
       }
     }

@@ -103,7 +103,7 @@
     <header>
         <h1>Тернівка Об'яви</h1>
         <div id="user-info">
-            <!-- Кнопка Telegram авторизації згенерується автоматично -->
+            <!-- Кнопка авторизації або інформація про користувача -->
         </div>
     </header>
 
@@ -146,16 +146,16 @@
 <script>
     // Ініціалізація Supabase
     const SUPABASE_URL = 'https://lpocqhvozuugcnzgquiu.supabase.co';
-    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // Замініть на свій anon key
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SUPABASE_KEY = 'sb_publishable_ybld3op1Zra4aqnNEykSiw__28Xp-dC';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // Завантаження оголошень з БД
     async function fetchAds() {
         const container = document.getElementById('ads-container');
-        const { data: ads, error } = await supabase
-            .from('ads')
+        const { data: ads, error } = await supabaseClient
+            .from('announcements')
             .select('*')
-            .order('created_at', { ascending: false });
+            .order('id', { ascending: false });
 
         if (error) {
             container.innerHTML = '<p>Помилка завантаження оголошень.</p>';
@@ -173,15 +173,15 @@
                 <h3>${escapeHtml(ad.title)}</h3>
                 <p>${escapeHtml(ad.description)}</p>
                 ${ad.image_url ? `<img src="${ad.image_url}" alt="${escapeHtml(ad.title)}">` : ''}
-                <p><strong>Ціна:</strong> ${ad.price ? ad.price + ' грн' : 'Договірна'}</p>
-                <small>Опубліковано: ${new Date(ad.created_at).toLocaleDateString('uk-UA')}</small>
+                <p><strong>Ціна:</strong> ${ad.price ? escapeHtml(ad.price) : 'Договірна'}</p>
+                <p><strong>Тел:</strong> ${ad.phone ? escapeHtml(ad.phone) : 'Не вказано'}</p>
             </div>
         `).join('');
     }
 
     function escapeHtml(text) {
         if (!text) return '';
-        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        return text.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
     // Запуск завантаження при відкритті сторінки

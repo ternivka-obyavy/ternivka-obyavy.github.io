@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Тернівка Об'яви - Головна</title>
+    <title>Тернівка Об'яви</title>
     
-    <!-- Підключення Firebase SDK (Auth та Firestore) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <!-- Підключення Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         body { 
@@ -21,27 +19,30 @@
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            border-bottom: 2px solid #ccc; 
-            padding-bottom: 10px; 
-            margin-bottom: 20px; 
             background: #012b28;
             color: white;
             padding: 15px 20px;
             border-radius: 8px;
+            margin-bottom: 20px;
         }
-        header h1 { margin: 0; font-size: 1.5rem; }
+        header h1 { margin: 0; font-size: 1.5rem; color: white; }
         .container { max-width: 900px; margin: 0 auto; }
         
-        /* Авторизація в шапці */
+        /* Кнопки в шапці */
         .auth-block { display: flex; align-items: center; gap: 10px; }
-        .user-name { font-weight: bold; }
+        .user-badge {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
 
         /* Секція категорій */
-        .categories-section { margin-bottom: 30px; }
-        .categories-section h2 { font-size: 1.4rem; color: #333; margin-bottom: 15px; }
+        .categories-section { margin-bottom: 30px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .categories-section h2 { font-size: 1.2rem; color: #333; margin-bottom: 15px; margin-top: 0; }
         .categories-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
             gap: 12px;
         }
         .category-card {
@@ -49,20 +50,19 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 15px 10px;
-            background-color: white;
+            padding: 12px 8px;
+            background-color: #f8f9fa;
             border-radius: 8px;
             text-decoration: none;
             color: #333;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: transform 0.2s ease, background 0.2s ease;
         }
         .category-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+            background-color: #e9ecef;
         }
-        .category-card .icon { font-size: 1.8rem; margin-bottom: 6px; }
-        .category-card h3 { margin: 0; font-size: 0.95rem; font-weight: bold; text-align: center; }
+        .category-card .icon { font-size: 1.5rem; margin-bottom: 5px; }
+        .category-card h3 { margin: 0; font-size: 0.85rem; font-weight: bold; text-align: center; }
 
         /* Оголошення */
         .card { 
@@ -95,7 +95,7 @@
     <header>
         <h1>📢 Тернівка Об'яви</h1>
         <div id="auth-container" class="auth-block">
-            <!-- Динамічно заповнюється JS (Кнопка входу або профіль) -->
+            <!-- Динамічно заповнюється JS -->
         </div>
     </header>
 
@@ -123,7 +123,7 @@
                 <span class="icon">📱</span>
                 <h3>Електроніка</h3>
             </a>
-            <a href="catalog.html?category=home" class="category-card">
+            <a href="catalog.html`category=home" class="category-card">
                 <span class="icon">🏡</span>
                 <h3>Дім та сад</h3>
             </a>
@@ -144,76 +144,78 @@
 </div>
 
 <script>
-    // ⚠️ Вставте сюди ваші реальні конфігураційні дані з Firebase Console
-    const firebaseConfig = {
-        apiKey: "ВАШ_API_KEY",
-        authDomain: "ВАШ_AUTH_DOMAIN",
-        projectId: "ternivka-obyavy",
-        storageBucket: "ВАШ_STORAGE_BUCKET",
-        messagingSenderId: "ВАШ_MESSAGING_SENDER_ID",
-        appId: "ВАШ_APP_ID"
-    };
+    // Ваші дані проєкту Supabase
+    const SUPABASE_URL = 'https://lpocqhvozuugcnzgquiu.supabase.co';
+    const SUPABASE_ANON_KEY = 'ВАШ_SUPABASE_ANON_KEY'; // Вставте ваш ключ із налаштувань Supabase
 
-    // Ініціалізація Firebase
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Логіка Google Auth та шапки сайту
-    const provider = new firebase.auth.GoogleAuthProvider();
-
-    function loginWithGoogle() {
-        auth.signInWithPopup(provider).catch((error) => {
-            console.error("Помилка входу:", error);
+    // Функція входу через Google
+    async function loginWithGoogle() {
+        const { error } = await supabaseClient.auth.signInWithOAuth({
+            provider: 'google',
         });
+        if (error) {
+            console.error('Помилка входу:', error.message);
+        }
     }
 
-    function logout() {
-        auth.signOut();
+    // Функція виходу
+    async function logout() {
+        await supabaseClient.auth.signOut();
+        location.reload();
     }
 
-    auth.onAuthStateChanged((user) => {
+    // Перевірка стану авторизації та побудова шапки
+    async function checkUser() {
+        const { data: { user } } = await supabaseClient.auth.getUser();
         const authContainer = document.getElementById('auth-container');
+
         if (user) {
+            const userName = user.user_metadata?.full_name || user.email;
             authContainer.innerHTML = `
-                <span class="user-name">${user.displayName || user.email}</span>
-                <a href="cabinet.html" class="btn">Мій кабінет</a>
+                <a href="create.html" class="btn">+ Додати оголошення</a>
+                <span class="user-badge">${userName}</span>
                 <button class="btn btn-danger" onclick="logout()">Вийти</button>
             `;
         } else {
             authContainer.innerHTML = `
+                <a href="create.html" class="btn">+ Додати оголошення</a>
                 <button class="btn" onclick="loginWithGoogle()">Увійти через Google</button>
             `;
         }
-    });
+    }
 
-    // Завантаження оголошень із Firestore
+    // Завантаження оголошень з бази Supabase (таблиця announcements)
     async function fetchAds() {
         const container = document.getElementById('ads-container');
         try {
-            const querySnapshot = await db.collection('announcements').orderBy('createdAt', 'desc').get();
-            
-            if (querySnapshot.empty) {
+            const { data: ads, error } = await supabaseClient
+                .from('announcements')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            if (!ads || ads.length === 0) {
                 container.innerHTML = '<p>Оголошень поки немає.</p>';
                 return;
             }
 
             let html = '';
-            querySnapshot.forEach((doc) => {
-                const ad = doc.data();
+            ads.forEach(ad => {
                 html += `
                     <div class="card">
                         <h3>${escapeHtml(ad.title)}</h3>
                         <p>${escapeHtml(ad.description)}</p>
-                        ${ad.imageUrl ? `<img src="${ad.imageUrl}" alt="Фото">` : ''}
+                        ${ad.image_url ? `<img src="${ad.image_url}" alt="Фото">` : ''}
                         <p><strong>Ціна:</strong> ${ad.price ? escapeHtml(ad.price) + ' грн' : 'Договірна'}</p>
-                        <p><strong>Телефон:</strong> ${escapeHtml(ad.phone || 'Не вказано')}</p>
                     </div>
                 `;
             });
             container.innerHTML = html;
         } catch (error) {
-            container.innerHTML = '<p>Помилка завантаження оголошень.</p>';
+            container.innerHTML = '<p>Помилка завантаження оголошень. Перевірте підключення до бази даних.</p>';
             console.error(error);
         }
     }
@@ -223,6 +225,8 @@
         return text.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
+    // Запуск при завантаженні сторінки
+    checkUser();
     fetchAds();
 </script>
 

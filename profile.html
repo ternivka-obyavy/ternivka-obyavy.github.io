@@ -13,12 +13,21 @@
         .container { max-width: 900px; margin: 30px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
         h1 { color: var(--primary-color); font-size: 1.5rem; margin-top: 0; }
         .user-info { background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 25px; border-left: 4px solid var(--primary-color); }
-        .ad-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 12px 0; }
+        .ad-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 12px 0; gap: 10px; }
         .ad-info h4 { margin: 0 0 5px 0; color: #333; }
         .ad-info p { margin: 0; font-weight: bold; color: var(--primary-color); }
-        .btn { background: #ff5252; color: white; border: none; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn:hover { background: #e04141; }
+        .btn-group { display: flex; gap: 8px; }
+        .btn { border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; }
+        .btn-edit { background: #ffce32; color: #012b28; }
+        .btn-edit:hover { background: #e6b825; }
+        .btn-danger { background: #ff5252; color: white; }
+        .btn-danger:hover { background: #e04141; }
         .btn-home { background: white; color: var(--primary-color); padding: 6px 12px; border-radius: 4px; text-decoration: none; font-weight: bold; }
+        
+        /* Модальне вікно редагування */
+        #edit-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 25px; border-radius: 8px; width: 90%; max-width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; }
+        .modal-content input, .modal-content textarea { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
     </style>
 </head>
 <body>
@@ -41,10 +50,28 @@
         </div>
     </div>
 
+    <!-- Модальне вікно редагування оголошення -->
+    <div id="edit-modal">
+        <div class="modal-content">
+            <span onclick="closeEditModal()" style="cursor:pointer; position:absolute; top:10px; right:15px; font-size:20px; color:#aaa;">&times;</span>
+            <h3 style="margin-top:0; color:var(--primary-color);">Редагувати оголошення</h3>
+            <input type="hidden" id="edit-id">
+            <label style="font-size: 13px; font-weight: bold;">Назва:</label>
+            <input type="text" id="edit-title">
+            <label style="font-size: 13px; font-weight: bold;">Ціна (грн):</label>
+            <input type="number" id="edit-price">
+            <label style="font-size: 13px; font-weight: bold;">Телефон:</label>
+            <input type="text" id="edit-phone">
+            <button class="btn btn-edit" style="width: 100%; padding: 10px; margin-top: 5px;" onclick="saveAdChanges()">Зберегти зміни</button>
+        </div>
+    </div>
+
     <script>
         const SUPABASE_URL = 'https://lpocqhvozuugcnzgquiu.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_ybld3op1Zra4aqnNEykSiw__28Xp-dC';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentUserId = null;
 
         async function loadUserData() {
             const { data: { user } } = await supabaseClient.auth.getUser();
@@ -52,6 +79,7 @@
                 window.location.href = 'index.html';
                 return;
             }
+            currentUserId = user.id;
 
             const userName = user.user_metadata?.full_name || user.email;
             document.getElementById('user-profile-info').innerHTML = `
@@ -59,7 +87,7 @@
                 <p><b>Email:</b> ${user.email}</p>
             `;
 
-            loadMyAds(user.id);
+            loadMyAds(currentUserId);
         }
 
         async function loadMyAds(userId) {
@@ -88,11 +116,45 @@
                             <h4>${escapeHtml(ad.title)}</h4>
                             <p>${ad.price ? ad.price + ' грн' : 'Договірна'}</p>
                         </div>
-                        <button class="btn" onclick="deleteAd('${ad.id}')">Видалити</button>
+                        <div class="btn-group">
+                            <button class="btn btn-edit" onclick='openEditModal(${JSON.stringify(ad)})'>Редагувати</button>
+                            <button class="btn btn-danger" onclick="deleteAd('${ad.id}')">Видалити</button>
+                        </div>
                     </div>
                 `;
             });
             container.innerHTML = html;
+        }
+
+        function openEditModal(ad) {
+            document.getElementById('edit-id').value = ad.id;
+            document.getElementById('edit-title').value = ad.title || '';
+            document.getElementById('edit-price').value = ad.price || '';
+            document.getElementById('edit-phone').value = ad.phone || '';
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').style.display = 'none';
+        }
+
+        async function saveAdChanges() {
+            const id = document.getElementById('edit-id').value;
+            const title = document.getElementById('edit-title').value;
+            const price = document.getElementById('edit-price').value;
+            const phone = document.getElementById('edit-phone').value;
+
+            const { error } = await supabaseClient
+                .from('announcements')
+                .update({ title, price: price ? Number(price) : null, phone })
+                .eq('id', id);
+
+            if (error) {
+                alert("Помилка оновлення: " + error.message);
+            } else {
+                closeEditModal();
+                loadMyAds(currentUserId);
+            }
         }
 
         async function deleteAd(id) {
@@ -106,7 +168,7 @@
             if (error) {
                 alert("Помилка видалення: " + error.message);
             } else {
-                loadUserData();
+                loadMyAds(currentUserId);
             }
         }
 

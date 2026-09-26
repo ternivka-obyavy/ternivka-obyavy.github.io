@@ -1,192 +1,247 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Тернівка Об'яви - Головна</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            margin: 0; 
-            padding: 20px; 
-            background-color: #f4f4f9; 
-        }
-        header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border-bottom: 2px solid #ccc; 
-            padding-bottom: 10px; 
-            margin-bottom: 20px; 
-        }
-        .container { 
-            max-width: 900px; 
-            margin: 0 auto; 
-        }
-        
-        /* Секція категорій */
-        .categories-section {
-            margin-bottom: 30px;
-        }
-        .categories-section h2 {
-            font-size: 1.4rem;
-            color: #333;
-            margin-bottom: 15px;
-        }
-        .categories-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 12px;
-        }
-        .category-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 15px 10px;
-            background-color: white;
-            border-radius: 8px;
-            text-decoration: none;
-            color: #333;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            cursor: pointer;
-        }
-        .category-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        .category-card .icon {
-            font-size: 1.8rem;
-            margin-bottom: 6px;
-        }
-        .category-card h3 {
-            margin: 0;
-            font-size: 0.95rem;
-            font-weight: bold;
-            text-align: center;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тернівка Об'яви — Дошка оголошень</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f2f4f5; color: #002f34; }
 
-        /* Оголошення */
-        .card { 
-            background: white; 
-            padding: 15px; 
-            border-radius: 8px; 
-            margin-bottom: 15px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-        }
-        .card img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 6px;
-            margin-top: 10px;
-        }
-        .btn { 
-            background: #007bff; 
-            color: white; 
-            border: none; 
-            padding: 8px 15px; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            text-decoration: none;
-            display: inline-block;
-        }
-        .btn:hover { 
-            background: #0056b3; 
-        }
-    </style>
+    /* Header */
+    header { background-color: #002f34; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; color: white; }
+    .logo { font-size: 24px; font-weight: bold; color: #23e5bf; text-decoration: none; cursor: pointer; }
+    .nav-buttons { display: flex; gap: 15px; align-items: center; }
+    .btn-auth { background: transparent; color: white; border: none; font-weight: 600; cursor: pointer; font-size: 15px; }
+    .btn-add { background-color: white; color: #002f34; padding: 10px 20px; border-radius: 4px; font-weight: bold; text-decoration: none; border: 2px solid white; cursor: pointer; transition: 0.2s; }
+    .btn-add:hover { background-color: transparent; color: white; }
+
+    /* Search & Filters */
+    .search-section { background-color: #002f34; padding: 30px 5% 50px; text-align: center; }
+    .search-box { display: flex; max-width: 800px; margin: 0 auto; gap: 10px; }
+    .search-input { flex: 1; padding: 14px; border: none; border-radius: 4px; font-size: 16px; outline: none; }
+    .btn-search { background-color: #23e5bf; color: #002f34; border: none; padding: 0 25px; border-radius: 4px; font-weight: bold; font-size: 16px; cursor: pointer; }
+
+    /* Main Content */
+    container { display: block; max-width: 1100px; margin: -20px auto 40px; padding: 0 15px; }
+    
+    /* Categories */
+    .categories { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; justify-content: space-around; flex-wrap: wrap; gap: 15px; margin-bottom: 30px; }
+    .cat-item { text-align: center; cursor: pointer; padding: 10px; border-radius: 8px; transition: 0.2s; }
+    .cat-item:hover { background-color: #e9fcf8; }
+    .cat-icon { font-size: 28px; margin-bottom: 5px; }
+    .cat-title { font-size: 14px; font-weight: 600; }
+
+    /* Ads Grid */
+    .section-title { font-size: 22px; font-weight: bold; margin-bottom: 20px; }
+    .ads-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 20px; }
+    .ad-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s; display: flex; flex-direction: column; }
+    .ad-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); transform: translateY(-2px); }
+    .ad-img { width: 100%; height: 160px; object-fit: cover; background-color: #e0e0e0; }
+    .ad-info { padding: 15px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+    .ad-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #002f34; }
+    .ad-price { font-size: 18px; font-weight: bold; color: #002f34; margin-bottom: 8px; }
+    .ad-date { font-size: 12px; color: #7f9799; }
+
+    /* Modals */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,47,52,0.7); justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: white; padding: 30px; border-radius: 8px; width: 100%; max-width: 450px; position: relative; }
+    .close-btn { position: absolute; top: 15px; right: 15px; font-size: 20px; cursor: pointer; border: none; background: none; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #7f9799; border-radius: 4px; font-size: 14px; }
+    .btn-submit { width: 100%; background-color: #002f34; color: white; padding: 12px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+  </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1>Тернівка Об'яви</h1>
-        <div id="user-info">
-            <!-- Кнопка авторизації або інформація про користувача -->
+  <!-- Header -->
+  <header>
+    <a class="logo" onclick="filterCategory('all')">Тернівка Об'яви</a>
+    <div class="nav-buttons">
+      <button class="btn-auth" onclick="openModal('authModal')">Увійти / Реєстрація</button>
+      <button class="btn-add" onclick="openModal('addAdModal')">+ Додати оголошення</button>
+    </div>
+  </header>
+
+  <!-- Search -->
+  <div class="search-section">
+    <div class="search-box">
+      <input type="text" id="searchInput" class="search-input" placeholder="Що шукаєте? (напр. Квартира, Авто)..." oninput="searchAds()">
+      <button class="btn-search" onclick="searchAds()">Пошук</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <container>
+    <!-- Categories -->
+    <div class="categories">
+      <div class="cat-item" onclick="filterCategory('realty')">
+        <div class="cat-icon">🏠</div>
+        <div class="cat-title">Нерухомість</div>
+      </div>
+      <div class="cat-item" onclick="filterCategory('auto')">
+        <div class="cat-icon">🚗</div>
+        <div class="cat-title">Авто</div>
+      </div>
+      <div class="cat-item" onclick="filterCategory('work')">
+        <div class="cat-icon">💼</div>
+        <div class="cat-title">Робота</div>
+      </div>
+      <div class="cat-item" onclick="filterCategory('electronics')">
+        <div class="cat-icon">📱</div>
+        <div class="cat-title">Електроніка</div>
+      </div>
+      <div class="cat-item" onclick="filterCategory('all')">
+        <div class="cat-icon">📋</div>
+        <div class="cat-title">Усі оголошення</div>
+      </div>
+    </div>
+
+    <!-- Ads List -->
+    <div class="section-title" id="sectionTitle">Останні оголошення</div>
+    <div class="ads-grid" id="adsContainer">
+      <!-- Cards will be inserted here by JS -->
+    </div>
+  </container>
+
+  <!-- Auth Modal -->
+  <div class="modal" id="authModal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeModal('authModal')">✕</button>
+      <h2 style="margin-bottom: 20px;">Вхід / Реєстрація</h2>
+      <form onsubmit="handleAuth(event)">
+        <div class="form-group">
+          <label>Email або Телефон</label>
+          <input type="text" required placeholder="example@mail.com">
         </div>
-    </header>
-
-    <!-- СЕКЦІЯ КАТЕГОРІЙ -->
-    <section class="categories-section">
-        <h2>Категорії оголошень</h2>
-        <div class="categories-grid">
-            <a href="catalog.html?category=realty" class="category-card">
-                <span class="icon">🏠</span>
-                <h3>Нерухомість</h3>
-            </a>
-            <a href="catalog.html?category=auto" class="category-card">
-                <span class="icon">🚗</span>
-                <h3>Авто</h3>
-            </a>
-            <a href="catalog.html?category=work" class="category-card">
-                <span class="icon">💼</span>
-                <h3>Робота</h3>
-            </a>
-            <a href="catalog.html?category=services" class="category-card">
-                <span class="icon">🛠️</span>
-                <h3>Послуги</h3>
-            </a>
-            <a href="catalog.html?category=electronics" class="category-card">
-                <span class="icon">📱</span>
-                <h3>Електроніка</h3>
-            </a>
-            <a href="catalog.html?category=home" class="category-card">
-                <span class="icon">🛋️</span>
-                <h3>Дім і сад</h3>
-            </a>
+        <div class="form-group">
+          <label>Пароль</label>
+          <input type="password" required placeholder="******">
         </div>
-    </section>
+        <button type="submit" class="btn-submit">Увійти</button>
+      </form>
+    </div>
+  </div>
 
-    <!-- СЕКЦІЯ ОСТАННІХ ОГОЛОШЕНЬ -->
-    <h2>Останні оголошення</h2>
-    <div id="ads-container">Завантаження оголошень...</div>
-</div>
+  <!-- Add Ad Modal -->
+  <div class="modal" id="addAdModal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeModal('addAdModal')">✕</button>
+      <h2 style="margin-bottom: 20px;">Створити оголошення</h2>
+      <form onsubmit="addNewAd(event)">
+        <div class="form-group">
+          <label>Заголовок</label>
+          <input type="text" id="adTitleInput" required placeholder="Наприклад: Продам велосипед">
+        </div>
+        <div class="form-group">
+          <label>Категорія</label>
+          <select id="adCategoryInput">
+            <option value="realty">Нерухомість</option>
+            <option value="auto">Авто</option>
+            <option value="work">Робота</option>
+            <option value="electronics">Електроніка</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Ціна (грн)</label>
+          <input type="number" id="adPriceInput" required placeholder="1000">
+        </div>
+        <div class="form-group">
+          <label>Посилання на фото (URL)</label>
+          <input type="url" id="adImgInput" placeholder="https://images.unsplash.com/photo-...">
+        </div>
+        <button type="submit" class="btn-submit">Опублікувати</button>
+      </form>
+    </div>
+  </div>
 
-<script>
-    // Ініціалізація Supabase
-    const SUPABASE_URL = 'https://lpocqhvozuugcnzgquiu.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_ybld3op1Zra4aqnNEykSiw__28Xp-dC';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  <script>
+    // Initial Data
+    let ads = [
+      { id: 1, title: '2-кімнатна квартира в центрі', price: '12 000 грн', category: 'realty', img: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=500', date: 'Сьогодні о 10:15' },
+      { id: 2, title: 'Volkswagen Golf 2015 року', price: '320 000 грн', category: 'auto', img: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=500', date: 'Сьогодні о 09:30' },
+      { id: 3, title: 'iPhone 13 128GB Стан 9/10', price: '18 500 грн', category: 'electronics', img: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500', date: 'Учора о 18:40' }
+    ];
 
-    // Завантаження оголошень з БД
-    async function fetchAds() {
-        const container = document.getElementById('ads-container');
-        const { data: ads, error } = await supabaseClient
-            .from('announcements')
-            .select('*')
-            .order('id', { ascending: false });
+    function renderAds(list) {
+      const container = document.getElementById('adsContainer');
+      container.innerHTML = '';
+      
+      if (list.length === 0) {
+        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #7f9799;">Оголошень не знайдено.</p>';
+        return;
+      }
 
-        if (error) {
-            container.innerHTML = '<p>Помилка завантаження оголошень.</p>';
-            console.error(error);
-            return;
-        }
-
-        if (!ads || ads.length === 0) {
-            container.innerHTML = '<p>Оголошень поки немає.</p>';
-            return;
-        }
-
-        container.innerHTML = ads.map(ad => `
-            <div class="card">
-                <h3>${escapeHtml(ad.title)}</h3>
-                <p>${escapeHtml(ad.description)}</p>
-                ${ad.image_url ? `<img src="${ad.image_url}" alt="${escapeHtml(ad.title)}">` : ''}
-                <p><strong>Ціна:</strong> ${ad.price ? escapeHtml(ad.price) : 'Договірна'}</p>
-                <p><strong>Тел:</strong> ${ad.phone ? escapeHtml(ad.phone) : 'Не вказано'}</p>
+      list.forEach(ad => {
+        const defaultImg = 'https://via.placeholder.com/300x200?text=Немає+фото';
+        const card = `
+          <div class="ad-card">
+            <img class="ad-img" src="${ad.img || defaultImg}" alt="${ad.title}" onerror="this.src='${defaultImg}'">
+            <div class="ad-info">
+              <div>
+                <div class="ad-title">${ad.title}</div>
+                <div class="ad-price">${ad.price}</div>
+              </div>
+              <div class="ad-date">${ad.date}</div>
             </div>
-        `).join('');
+          </div>
+        `;
+        container.innerHTML += card;
+      });
     }
 
-    function escapeHtml(text) {
-        if (!text) return '';
-        return text.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    function filterCategory(cat) {
+      if (cat === 'all') {
+        document.getElementById('sectionTitle').innerText = "Усі оголошення";
+        renderAds(ads);
+      } else {
+        const names = { realty: 'Нерухомість', auto: 'Авто', work: 'Робота', electronics: 'Електроніка' };
+        document.getElementById('sectionTitle').innerText = "Категорія: " + names[cat];
+        const filtered = ads.filter(a => a.category === cat);
+        renderAds(filtered);
+      }
     }
 
-    // Запуск завантаження при відкритті сторінки
-    fetchAds();
-</script>
+    function searchAds() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = ads.filter(a => a.title.toLowerCase().includes(query));
+      renderAds(filtered);
+    }
 
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function handleAuth(e) {
+      e.preventDefault();
+      alert('Успішний вхід!');
+      closeModal('authModal');
+    }
+
+    function addNewAd(e) {
+      e.preventDefault();
+      const title = document.getElementById('adTitleInput').value;
+      const category = document.getElementById('adCategoryInput').value;
+      const price = document.getElementById('adPriceInput').value + ' грн';
+      const img = document.getElementById('adImgInput').value;
+
+      const newAd = {
+        id: Date.now(),
+        title: title,
+        price: price,
+        category: category,
+        img: img,
+        date: 'Щойно'
+      };
+
+      ads.unshift(newAd);
+      renderAds(ads);
+      closeModal('addAdModal');
+      e.target.reset();
+    }
+
+    // Initial render
+    renderAds(ads);
+  </script>
 </body>
 </html>

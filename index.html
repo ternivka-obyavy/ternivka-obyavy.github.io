@@ -239,7 +239,7 @@
     <header>
         <a href="index.html" class="logo-area">📢 Тернівка Об'яви</a>
         <div id="auth-container" class="header-right">
-            <!-- Заповнюється JS -->
+            <!-- Заповнюється JS (Кнопки входу / користувач) -->
         </div>
     </header>
 
@@ -297,20 +297,108 @@
         </div>
     </div>
 
+    <!-- Модальне вікно авторизації Supabase -->
+    <div id="auth-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+      <div style="background:white; padding:25px; border-radius:12px; max-width:380px; width:90%; box-shadow:0 4px 20px rgba(0,0,0,0.2); position:relative; font-family:sans-serif;">
+        <span id="close-auth-modal" style="cursor:pointer; position:absolute; top:12px; right:15px; font-size:22px; color:#aaa;">&times;</span>
+        <h2 style="margin-top:0; margin-bottom:20px; font-size:20px; text-align:center; color:#333;">Вхід / Реєстрація</h2>
+
+        <!-- Кнопка Google -->
+        <button id="google-login-btn" style="width:100%; padding:11px; margin-bottom:15px; background:#fff; color:#444; border:1px solid #ddd; border-radius:6px; cursor:pointer; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:10px;">
+          🌐 Увійти через Google
+        </button>
+        
+        <div style="text-align:center; margin-bottom:15px; color:#888; font-size:14px; position:relative;">
+          <span style="background:white; padding:0 10px; position:relative; z-index:1;">або через пошту</span>
+          <hr style="border:none; border-top:1px solid #eee; position:absolute; top:50%; width:100%; margin:0; z-index:0;">
+        </div>
+
+        <!-- Форма пошта/пароль -->
+        <form id="email-auth-form" onsubmit="return false;">
+          <input type="email" id="auth-email" placeholder="Електронна пошта" required style="width:100%; padding:10px; margin-bottom:10px; border:1px solid #ddd; border-radius:6px; box-sizing:border-box;">
+          <input type="password" id="auth-password" placeholder="Пароль (мін. 6 символів)" required style="width:100%; padding:10px; margin-bottom:15px; border:1px solid #ddd; border-radius:6px; box-sizing:border-box;">
+          
+          <div style="display:flex; gap:10px;">
+            <button type="button" id="submit-login-btn" style="flex:1; padding:10px; background:#28a745; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Увійти</button>
+            <button type="button" id="submit-signup-btn" style="flex:1; padding:10px; background:#007bff; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Реєстрація</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
 <script>
     const SUPABASE_URL = 'https://lpocqhvozuugcnzgquiu.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_ybld3op1Zra4aqnNEykSiw__28Xp-dC';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    async function loginWithGoogle() {
-        await supabaseClient.auth.signInWithOAuth({ provider: 'google' });
+    // Логіка модального вікна
+    const modal = document.getElementById('auth-modal');
+    const closeBtn = document.getElementById('close-auth-modal');
+
+    function openAuthModal() {
+        modal.style.display = 'flex';
     }
+
+    closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+
+    // 1. Вхід через Google
+    document.getElementById('google-login-btn').addEventListener('click', async () => {
+        const { error } = await supabaseClient.auth.signInWithOAuth({ provider: 'google' });
+        if (error) alert("Помилка входу через Google: " + error.message);
+    });
+
+    // 2. Реєстрація за поштою та паролем
+    document.getElementById('submit-signup-btn').addEventListener('click', async () => {
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+
+        if (!email || !password) {
+            alert("Будь ласка, заповніть усі поля.");
+            return;
+        }
+
+        const { error } = await supabaseClient.auth.signUp({ email, password });
+        if (error) {
+            alert("Помилка реєстрації: " + error.message);
+        } else {
+            alert("Акаунт успішно створено! Перевірте пошту для підтвердження (якщо увімкнено) або увійдіть.");
+            modal.style.display = 'none';
+        }
+    });
+
+    // 3. Вхід за поштою та паролем
+    document.getElementById('submit-login-btn').addEventListener('click', async () => {
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+
+        if (!email || !password) {
+            alert("Будь ласка, заповніть усі поля.");
+            return;
+        }
+
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) {
+            alert("Помилка входу: " + error.message);
+        } else {
+            modal.style.display = 'none';
+            checkUser();
+        }
+    });
 
     async function logout() {
         await supabaseClient.auth.signOut();
-        location.reload();
+        checkUser();
     }
 
+    // Перевірка стану користувача та оновлення шапки
     async function checkUser() {
         const { data: { user } } = await supabaseClient.auth.getUser();
         const authContainer = document.getElementById('auth-container');
@@ -318,18 +406,19 @@
         if (user) {
             const userName = user.user_metadata?.full_name || user.email;
             authContainer.innerHTML = `
-                <span class="user-badge">${userName}</span>
                 <a href="create.html" class="btn btn-primary">+ Додати оголошення</a>
+                <span class="user-badge">${userName}</span>
                 <button class="btn" style="border-color: #ff5252; color: #ff5252;" onclick="logout()">Вийти</button>
             `;
         } else {
             authContainer.innerHTML = `
                 <a href="create.html" class="btn btn-primary">+ Додати оголошення</a>
-                <button class="btn" onclick="loginWithGoogle()">Увійти через Google</button>
+                <button class="btn" onclick="openAuthModal()">Увійти / Реєстрація</button>
             `;
         }
     }
 
+    // Завантаження оголошень з БД Supabase
     async function fetchAds() {
         const container = document.getElementById('ads-container');
         try {
@@ -376,6 +465,7 @@
         return text.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
+    // Ініціалізація при завантаженні
     checkUser();
     fetchAds();
 </script>

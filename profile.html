@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Особистий кабінет - Тернівка Об'яви</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --primary-color: #012b28; --accent-color: #ffce32; --bg-color: #f4f4f9; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: var(--bg-color); color: #333; }
+        header { background: var(--primary-color); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; }
+        .logo-area { color: white; text-decoration: none; font-size: 1.3rem; font-weight: bold; }
+        .container { max-width: 900px; margin: 30px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+        h1 { color: var(--primary-color); font-size: 1.5rem; margin-top: 0; }
+        .user-info { background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 25px; border-left: 4px solid var(--primary-color); }
+        .ad-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 12px 0; }
+        .ad-info h4 { margin: 0 0 5px 0; color: #333; }
+        .ad-info p { margin: 0; font-weight: bold; color: var(--primary-color); }
+        .btn { background: #ff5252; color: white; border: none; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn:hover { background: #e04141; }
+        .btn-home { background: white; color: var(--primary-color); padding: 6px 12px; border-radius: 4px; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo-area">📢 Тернівка Об'яви</a>
+        <a href="index.html" class="btn-home">На головну</a>
+    </header>
+
+    <div class="container">
+        <h1>Особистий кабінет</h1>
+        
+        <div class="user-info" id="user-profile-info">
+            <p>Завантаження даних профілю...</p>
+        </div>
+
+        <h2>Мої оголошення</h2>
+        <div id="my-ads-container">
+            <p>Завантаження ваших оголошень...</p>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://lpocqhvozuugcnzgquiu.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_ybld3op1Zra4aqnNEykSiw__28Xp-dC';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function loadUserData() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const userName = user.user_metadata?.full_name || user.email;
+            document.getElementById('user-profile-info').innerHTML = `
+                <p><b>Користувач:</b> ${userName}</p>
+                <p><b>Email:</b> ${user.email}</p>
+            `;
+
+            loadMyAds(user.id);
+        }
+
+        async function loadMyAds(userId) {
+            const container = document.getElementById('my-ads-container');
+            const { data: ads, error } = await supabaseClient
+                .from('announcements')
+                .select('*')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                container.innerHTML = '<p style="color:red;">Помилка завантаження оголошень.</p>';
+                return;
+            }
+
+            if (!ads || ads.length === 0) {
+                container.innerHTML = '<p>У вас поки немає створених оголошень.</p>';
+                return;
+            }
+
+            let html = '';
+            ads.forEach(ad => {
+                html += `
+                    <div class="ad-item">
+                        <div class="ad-info">
+                            <h4>${escapeHtml(ad.title)}</h4>
+                            <p>${ad.price ? ad.price + ' грн' : 'Договірна'}</p>
+                        </div>
+                        <button class="btn" onclick="deleteAd('${ad.id}')">Видалити</button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        async function deleteAd(id) {
+            if (!confirm("Ви впевнені, що хочете видалити це оголошення?")) return;
+
+            const { error } = await supabaseClient
+                .from('announcements')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                alert("Помилка видалення: " + error.message);
+            } else {
+                loadUserData();
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        loadUserData();
+    </script>
+</body>
+</html>

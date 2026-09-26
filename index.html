@@ -26,8 +26,8 @@
     container { display: block; max-width: 1100px; margin: -20px auto 40px; padding: 0 15px; }
     
     /* Categories */
-    .categories { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; justify-content: space-around; flex-wrap: wrap; gap: 15px; margin-bottom: 30px; }
-    .cat-item { text-align: center; cursor: pointer; padding: 10px; border-radius: 8px; transition: 0.2s; }
+    .categories { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; margin-bottom: 30px; }
+    .cat-item { text-align: center; cursor: pointer; padding: 10px 15px; border-radius: 8px; transition: 0.2s; min-width: 100px; }
     .cat-item:hover { background-color: #e9fcf8; }
     .cat-icon { font-size: 28px; margin-bottom: 5px; }
     .cat-title { font-size: 14px; font-weight: 600; }
@@ -79,7 +79,7 @@
     <!-- Categories -->
     <div class="categories">
       <div class="cat-item" onclick="filterCategory('realty')">
-        <div class="cat-icon">🏠</div>
+        <div class="cat-icon">🏙️</div>
         <div class="cat-title">Нерухомість</div>
       </div>
       <div class="cat-item" onclick="filterCategory('auto')">
@@ -93,6 +93,18 @@
       <div class="cat-item" onclick="filterCategory('electronics')">
         <div class="cat-icon">📱</div>
         <div class="cat-title">Електроніка</div>
+      </div>
+      <div class="cat-item" onclick="filterCategory('home_garden')">
+        <div class="cat-icon">🏡</div>
+        <div class="cat-title">Дім та сад</div>
+      </div>
+      <div class="cat-item" onclick="filterCategory('sport')">
+        <div class="cat-icon">⚽</div>
+        <div class="cat-title">Спорт</div>
+      </div>
+      <div class="cat-item" onclick="filterCategory('other')">
+        <div class="cat-icon">📦</div>
+        <div class="cat-title">Інші оголошення</div>
       </div>
       <div class="cat-item" onclick="filterCategory('all')">
         <div class="cat-icon">📋</div>
@@ -139,7 +151,7 @@
       <form onsubmit="addNewAd(event)">
         <div class="form-group">
           <label>Заголовок</label>
-          <input type="text" id="adTitleInput" required placeholder="Наприклад: Продам велосипед">
+          <input type="text" id="adTitleInput" required placeholder="Наприклад: Продам диван">
         </div>
         <div class="form-group">
           <label>Категорія</label>
@@ -148,6 +160,9 @@
             <option value="auto">Авто</option>
             <option value="work">Робота</option>
             <option value="electronics">Електроніка</option>
+            <option value="home_garden">Дім та сад</option>
+            <option value="sport">Спорт</option>
+            <option value="other">Інші оголошення</option>
           </select>
         </div>
         <div class="form-group">
@@ -165,7 +180,7 @@
 
   <script>
     let ads = [];
-    let isLoggedIn = false; // Стан авторизації
+    let isLoggedIn = false;
 
     function renderAds(list) {
       const container = document.getElementById('adsContainer');
@@ -221,7 +236,6 @@
       document.getElementById('authBtn').innerText = 'Вийти (' + email.split('@')[0] + ')';
       closeModal('authModal');
       
-      // Якщо вікно входу відкрилося при спробі додати оголошення — відкриваємо форму оголошення
       if (document.getElementById('authAlert').style.display === 'block') {
         document.getElementById('authAlert').style.display = 'none';
         openModal('addAdModal');
@@ -233,7 +247,15 @@
         document.getElementById('sectionTitle').innerText = "Усі оголошення";
         renderAds(ads);
       } else {
-        const names = { realty: 'Нерухомість', auto: 'Авто', work: 'Робота', electronics: 'Електроніка' };
+        const names = { 
+          realty: 'Нерухомість', 
+          auto: 'Авто', 
+          work: 'Робота', 
+          electronics: 'Електроніка',
+          home_garden: 'Дім та сад',
+          sport: 'Спорт',
+          other: 'Інші оголошення'
+        };
         document.getElementById('sectionTitle').innerText = "Категорія: " + names[cat];
         const filtered = ads.filter(a => a.category === cat);
         renderAds(filtered);

@@ -3,16 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Тернівка Об'яви</title>
+  <title>Тернівка Об'яви — Особистий кабінет</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f9; }
     header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
+    
     .container { max-width: 800px; margin: 20px auto; }
-    .card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
+    
     .btn { background: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
     .btn:hover { background: #0056b3; }
     .btn-secondary { background: #6c757d; }
     .btn-secondary:hover { background: #5a6268; }
+    .btn-danger { background: #dc3545; }
+    .btn-danger:hover { background: #bd2130; }
     
     .form-container { background: white; padding: 20px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .form-group { margin-bottom: 12px; }
@@ -21,6 +25,11 @@
     
     .auth-box { display: flex; gap: 10px; align-items: center; }
     .hidden { display: none; }
+    
+    /* Навігація між вкладками */
+    .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    .tab-btn { background: #e9ecef; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    .tab-btn.active { background: #007bff; color: white; }
   </style>
 </head>
 <body>
@@ -60,33 +69,51 @@
       </form>
     </div>
 
-    <!-- Форма додавання оголошення -->
-    <div class="form-container">
-      <h2>+ Додати нове оголошення</h2>
-      <form id="addCardForm">
-        <div class="form-group">
-          <label for="title">Заголовок оголошення:</label>
-          <input type="text" id="title" required placeholder="Наприклад: Продам велосипед">
-        </div>
-        <div class="form-group">
-          <label for="description">Опис:</label>
-          <textarea id="description" rows="3" required placeholder="Опишіть ваш товар або послугу..."></textarea>
-        </div>
-        <div class="form-group">
-          <label for="price">Ціна:</label>
-          <input type="text" id="price" required placeholder="Наприклад: 3000 грн або Договірна">
-        </div>
-        <div class="form-group">
-          <label for="phone">Номер телефону:</label>
-          <input type="text" id="phone" required placeholder="099-XXX-XX-XX">
-        </div>
-        <button type="submit" class="btn">Опублікувати оголошення</button>
-      </form>
+    <!-- Вкладки навігації -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" id="tabAllBtn" onclick="switchTab('all')">Усі оголошення</button>
+      <button class="tab-btn hidden" id="tabMyBtn" onclick="switchTab('my')">👤 Мій кабінет / Мої оголошення</button>
     </div>
 
-    <h2>Останні оголошення</h2>
-    <div id="announcementsList">
-      <!-- Оголошення будуть завантажуватися сюди -->
+    <!-- Вкладка 1: Усі оголошення та форма додавання -->
+    <div id="allSection">
+      <div class="form-container">
+        <h2>+ Додати нове оголошення</h2>
+        <form id="addCardForm">
+          <div class="form-group">
+            <label for="title">Заголовок оголошення:</label>
+            <input type="text" id="title" required placeholder="Наприклад: Продам велосипед">
+          </div>
+          <div class="form-group">
+            <label for="description">Опис:</label>
+            <textarea id="description" rows="3" required placeholder="Опишіть ваш товар або послугу..."></textarea>
+          </div>
+          <div class="form-group">
+            <label for="price">Ціна:</label>
+            <input type="text" id="price" required placeholder="Наприклад: 3000 грн або Договірна">
+          </div>
+          <div class="form-group">
+            <label for="phone">Номер телефону:</label>
+            <input type="text" id="phone" required placeholder="099-XXX-XX-XX">
+          </div>
+          <button type="submit" class="btn">Опублікувати оголошення</button>
+        </form>
+      </div>
+
+      <h2>Останні оголошення</h2>
+      <div id="announcementsList"></div>
+    </div>
+
+    <!-- Вкладка 2: Особистий кабінет -->
+    <div id="mySection" class="hidden">
+      <div class="form-container">
+        <h2>👤 Особистий кабінет</h2>
+        <p><strong>Ваш Email:</strong> <span id="profileEmail">-</span></p>
+        <p><strong>ID користувача:</strong> <span id="profileId">-</span></p>
+      </div>
+
+      <h2>Мої оголошення</h2>
+      <div id="myAnnouncementsList"></div>
     </div>
 
   </div>
@@ -98,22 +125,53 @@
     const SUPABASE_KEY = 'sb_publishable_ybld3op1Zra4aqnNEykSiw__28Xp-dC';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let authMode = 'register'; // 'register' або 'login'
+    let currentUser = null;
+    let authMode = 'register';
 
-    // Перевірка стану входу користувача
+    // Перевірка стану входу
     async function checkUser() {
       const { data: { user } } = await supabaseClient.auth.getUser();
+      currentUser = user;
+
       const guestBlock = document.getElementById('guestBlock');
       const userBlock = document.getElementById('userBlock');
-      const userEmail = document.getElementById('userEmail');
+      const tabMyBtn = document.getElementById('tabMyBtn');
 
       if (user) {
         guestBlock.classList.add('hidden');
         userBlock.classList.remove('hidden');
-        userEmail.textContent = user.email;
+        tabMyBtn.classList.remove('hidden');
+        
+        document.getElementById('userEmail').textContent = user.email;
+        document.getElementById('profileEmail').textContent = user.email;
+        document.getElementById('profileId').textContent = user.id;
       } else {
         guestBlock.classList.remove('hidden');
         userBlock.classList.add('hidden');
+        tabMyBtn.classList.add('hidden');
+        switchTab('all'); // повертаємо на головну, якщо вийшов
+      }
+    }
+
+    // Перемикання вкладок
+    function switchTab(tab) {
+      const allSection = document.getElementById('allSection');
+      const mySection = document.getElementById('mySection');
+      const tabAllBtn = document.getElementById('tabAllBtn');
+      const tabMyBtn = document.getElementById('tabMyBtn');
+
+      if (tab === 'all') {
+        allSection.classList.remove('hidden');
+        mySection.classList.add('hidden');
+        tabAllBtn.classList.add('active');
+        tabMyBtn.classList.remove('active');
+        loadAnnouncements();
+      } else {
+        allSection.classList.add('hidden');
+        mySection.classList.remove('hidden');
+        tabAllBtn.classList.remove('active');
+        tabMyBtn.classList.add('active');
+        loadMyAnnouncements();
       }
     }
 
@@ -130,7 +188,7 @@
       container.classList.remove('hidden');
     }
 
-    // Обробка реєстрації/входу
+    // Обробка авторизації
     document.getElementById('authForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('authEmail').value;
@@ -138,18 +196,16 @@
 
       if (authMode === 'register') {
         const { data, error } = await supabaseClient.auth.signUp({ email, password });
-        if (error) {
-          alert('Помилка реєстрації: ' + error.message);
-        } else {
-          alert('Реєстрація успішна! Якщо увімкнено підтвердження пошти, перевірте ваш email.');
+        if (error) alert('Помилка: ' + error.message);
+        else {
+          alert('Реєстрація успішна!');
           toggleAuthForm();
           checkUser();
         }
       } else {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) {
-          alert('Помилка входу: ' + error.message);
-        } else {
+        if (error) alert('Помилка входу: ' + error.message);
+        else {
           alert('Ви успішно увійшли!');
           toggleAuthForm();
           checkUser();
@@ -157,29 +213,24 @@
       }
     });
 
-    // Вихід з акаунту
+    // Вихід
     async function logout() {
       await supabaseClient.auth.signOut();
       checkUser();
     }
 
-    // Завантаження оголошень з бази
+    // Завантаження всіх оголошень
     async function loadAnnouncements() {
       const { data, error } = await supabaseClient
         .from('announcements')
         .select('*')
         .order('id', { ascending: false });
 
-      if (error) {
-        console.error('Помилка завантаження:', error);
-        return;
-      }
-
       const listDiv = document.getElementById('announcementsList');
       listDiv.innerHTML = '';
 
-      if (data.length === 0) {
-        listDiv.innerHTML = '<p>Поки немає оголошень. Будьте першим, хто додасть!</p>';
+      if (error || !data || data.length === 0) {
+        listDiv.innerHTML = '<p>Поки немає оголошень.</p>';
         return;
       }
 
@@ -196,7 +247,57 @@
       });
     }
 
-    // Обробка відправки форми оголошення
+    // Завантаження моїх оголошень в особистому кабінеті
+    async function loadMyAnnouncements() {
+      if (!currentUser) return;
+
+      const { data, error } = await supabaseClient
+        .from('announcements')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('id', { ascending: false });
+
+      const listDiv = document.getElementById('myAnnouncementsList');
+      listDiv.innerHTML = '';
+
+      if (error || !data || data.length === 0) {
+        listDiv.innerHTML = '<p>У вас ще немає доданих оголошень.</p>';
+        return;
+      }
+
+      data.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <h3>${item.title || 'Без назви'}</h3>
+          <p>${item.description || ''}</p>
+          <p><strong>Ціна:</strong> ${item.price || 'Не вказана'}</p>
+          <p><strong>Тел:</strong> ${item.phone || 'Не вказаний'}</p>
+          <button class="btn btn-danger" onclick="deleteAnnouncement(${item.id})">Видалити оголошення</button>
+        `;
+        listDiv.appendChild(card);
+      });
+    }
+
+    // Видалення оголошення
+    async function deleteAnnouncement(id) {
+      if (!confirm('Ви дійсно хочете видалити це оголошення?')) return;
+
+      const { error } = await supabaseClient
+        .from('announcements')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        alert('Помилка видалення!');
+        console.error(error);
+      } else {
+        alert('Оголошення видалено!');
+        loadMyAnnouncements();
+      }
+    }
+
+    // Додавання оголошення (прив'язуємо user_id)
     document.getElementById('addCardForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -205,12 +306,17 @@
       const price = document.getElementById('price').value;
       const phone = document.getElementById('phone').value;
 
-      const { data, error } = await supabaseClient
+      const payload = { title, description, price, phone };
+      if (currentUser) {
+        payload.user_id = currentUser.id;
+      }
+
+      const { error } = await supabaseClient
         .from('announcements')
-        .insert([{ title, description, price, phone }]);
+        .insert([payload]);
 
       if (error) {
-        alert('Помилка при збереженні оголошення!');
+        alert('Помилка збереження!');
         console.error(error);
       } else {
         alert('Оголошення успішно додано!');
@@ -219,7 +325,7 @@
       }
     });
 
-    // Ініціалізація сторінки
+    // Ініціалізація
     checkUser();
     loadAnnouncements();
   </script>

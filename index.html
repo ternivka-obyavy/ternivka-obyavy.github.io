@@ -87,7 +87,7 @@
             background: #004d48;
         }
 
-        /* Категорії */
+        /* Категорії (рівномірне вирівнювання) */
         .categories-section { 
             margin-bottom: 35px; 
         }
@@ -100,7 +100,7 @@
 
         .categories-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            grid-template-columns: repeat(4, 1fr); /* Робимо рівно 4 колонки в ряд */
             gap: 15px;
         }
 
@@ -133,6 +133,13 @@
             font-size: 0.9rem; 
             font-weight: 600; 
             text-align: center; 
+        }
+
+        /* Адаптивність сітки категорій для мобільних */
+        @media (max-width: 768px) {
+            .categories-grid {
+                grid-template-columns: repeat(2, 1fr); /* На телефонах буде по 2 в ряд */
+            }
         }
 
         /* Сітка оголошень */

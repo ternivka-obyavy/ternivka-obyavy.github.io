@@ -1,143 +1,293 @@
-<!-- Модальне вікно авторизації -->
-<div id="auth-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
-  <div style="background:white; padding:25px; border-radius:12px; max-width:380px; width:90%; box-shadow:0 4px 20px rgba(0,0,0,0.2); position:relative; font-family:sans-serif;">
-    <span id="close-auth-modal" style="cursor:pointer; position:absolute; top:12px; right:15px; font-size:22px; color:#aaa;">&times;</span>
-    <h2 style="margin-top:0; margin-bottom:20px; font-size:20px; text-align:center; color:#333;">Вхід / Реєстрація</h2>
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тернівка Об'яви</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        header {
+            background-color: #ffffff;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .auth-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .auth-btn:hover {
+            background-color: #0056b3;
+        }
+        main {
+            padding: 40px 20px;
+            text-align: center;
+        }
+        /* Стилі модального вікна */
+        #auth-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            max-width: 380px;
+            width: 90%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        #close-auth-modal {
+            cursor: pointer;
+            position: absolute;
+            top: 12px;
+            right: 15px;
+            font-size: 22px;
+            color: #aaa;
+        }
+        #google-login-btn {
+            width: 100%;
+            padding: 11px;
+            margin-bottom: 15px;
+            background: #fff;
+            color: #444;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .divider {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #888;
+            font-size: 14px;
+            position: relative;
+        }
+        .divider span {
+            background: white;
+            padding: 0 10px;
+            position: relative;
+            z-index: 1;
+        }
+        .divider hr {
+            border: none;
+            border-top: 1px solid #eee;
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            margin: 0;
+            z-index: 0;
+        }
+        input[type="email"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        .form-actions {
+            display: flex;
+            gap: 10px;
+        }
+        #submit-login-btn {
+            flex: 1;
+            padding: 10px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        #submit-signup-btn {
+            flex: 1;
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
 
-    <!-- Кнопка Google -->
-    <button id="google-login-btn" style="width:100%; padding:11px; margin-bottom:15px; background:#fff; color:#444; border:1px solid #ddd; border-radius:6px; cursor:pointer; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:10px;">
-      🌐 Увійти через Google
-    </button>
-    
-    <div style="text-align:center; margin-bottom:15px; color:#888; font-size:14px; position:relative;">
-      <span style="background:white; padding:0 10px; position:relative; z-index:1;">або через пошту</span>
-      <hr style="border:none; border-top:1px solid #eee; position:absolute; top:50%; width:100%; margin:0; z-index:0;">
+    <header>
+        <div class="logo">Тернівка Об'яви</div>
+        <button id="open-auth-modal" class="auth-btn">Увійти / Реєстрація</button>
+    </header>
+
+    <main>
+        <h1>Ласкаво просимо на дошку оголошень!</h1>
+        <p>Знайдіть або опублікуйте свої оголошення у Тернівці.</p>
+    </main>
+
+    <!-- Модальне вікно авторизації -->
+    <div id="auth-modal">
+        <div class="modal-content">
+            <span id="close-auth-modal">&times;</span>
+            <h2 style="margin-top:0; margin-bottom:20px; font-size:20px; text-align:center; color:#333;">Вхід / Реєстрація</h2>
+
+            <!-- Кнопка Google -->
+            <button id="google-login-btn">
+                🌐 Увійти через Google
+            </button>
+            
+            <div class="divider">
+                <span>або через пошту</span>
+                <hr>
+            </div>
+
+            <!-- Форма пошта/пароль -->
+            <form id="email-auth-form" onsubmit="return false;">
+                <input type="email" id="auth-email" placeholder="Електронна пошта" required>
+                <input type="password" id="auth-password" placeholder="Пароль (мін. 6 символів)" required>
+                
+                <div class="form-actions">
+                    <button type="button" id="submit-login-btn">Увійти</button>
+                    <button type="button" id="submit-signup-btn">Реєстрація</button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <!-- Форма пошта/пароль -->
-    <form id="email-auth-form" onsubmit="return false;">
-      <input type="email" id="auth-email" placeholder="Електронна пошта" required style="width:100%; padding:10px; margin-bottom:10px; border:1px solid #ddd; border-radius:6px; box-sizing:border-box;">
-      <input type="password" id="auth-password" placeholder="Пароль (мін. 6 символів)" required style="width:100%; padding:10px; margin-bottom:15px; border:1px solid #ddd; border-radius:6px; box-sizing:border-box;">
-      
-      <div style="display:flex; gap:10px;">
-        <button type="button" id="submit-login-btn" style="flex:1; padding:10px; background:#28a745; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Увійти</button>
-        <button type="button" id="submit-signup-btn" style="flex:1; padding:10px; background:#007bff; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Реєстрація</button>
-      </div>
-    </form>
-  </div>
-</div>
+    <!-- Логіка Firebase та керування формою -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { 
+            getAuth, 
+            signInWithPopup, 
+            GoogleAuthProvider, 
+            createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword, 
+            onAuthStateChanged,
+            signOut
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-<!-- Логіка Firebase та керування формою -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { 
-    getAuth, 
-    signInWithPopup, 
-    GoogleAuthProvider, 
-    createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword, 
-    onAuthStateChanged,
-    signOut
-  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        // Конфігурація вашого Firebase проєкту
+        const firebaseConfig = {
+            apiKey: "AIzaSyCeMdGopJlzj29W1w6NV6bwC4ilRB_U8EQ",
+            authDomain: "ternivka-obyavy.firebaseapp.com",
+            projectId: "ternivka-obyavy",
+            storageBucket: "ternivka-obyavy.firebasestorage.app",
+            messagingSenderId: "613440072530",
+            appId: "1:613440072530:web:1b4d8cdf41a94cc40fe88b"
+        };
 
-  // Ваша конфігурація Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyCeMdGopJlzj29W1w6NV6bwC4ilRB_U8EQ",
-    authDomain: "ternivka-obyavy.firebaseapp.com",
-    projectId: "ternivka-obyavy",
-    storageBucket: "ternivka-obyavy.firebasestorage.app",
-    messagingSenderId: "613440072530",
-    appId: "1:613440072530:web:1b4d8cdf41a94cc40fe88b"
-  };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth();
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth();
+        const modal = document.getElementById('auth-modal');
+        const openBtn = document.getElementById('open-auth-modal');
+        const closeBtn = document.getElementById('close-auth-modal');
 
-  // Логіка відкриття/закриття модального вікна (прив'яжіть до вашої кнопці "[Увійти / Реєстрація]")
-  const modal = document.getElementById('auth-modal');
-  const closeBtn = document.getElementById('close-auth-modal');
+        // Відкриття та закриття модального вікна
+        openBtn.addEventListener('click', () => {
+            modal.style.display = 'flex';
+        });
 
-  // Приклад відкриття вікна (якщо ваша кнопка має текст або клас, замініть селектор нижче)
-  document.addEventListener('click', (e) => {
-    if (e.target.textContent.includes('Увійти / Реєстрація')) {
-      modal.style.display = 'flex';
-    }
-  });
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
 
-  closeBtn.addEventListener('click', () => {
-    modal.style.display = 'none';
-  });
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
 
-  window.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      modal.style.display = 'none';
-    }
-  });
+        // 1. Вхід через Google
+        document.getElementById('google-login-btn').addEventListener('click', () => {
+            const provider = new GoogleAuthProvider();
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    modal.style.display = 'none';
+                })
+                .catch((error) => {
+                    alert("Помилка входу через Google: " + error.message);
+                });
+        });
 
-  // 1. Вхід через Google
-  document.getElementById('google-login-btn').addEventListener('click', () => {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider)
-      .then((result) => {
-        modal.style.display = 'none';
-      })
-      .catch((error) => {
-        alert("Помилка входу через Google: " + error.message);
-      });
-  });
+        // 2. Реєстрація за поштою та паролем
+        document.getElementById('submit-signup-btn').addEventListener('click', () => {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
 
-  // 2. Реєстрація за поштою та паролем
-  document.getElementById('submit-signup-btn').addEventListener('click', () => {
-    const email = document.getElementById('auth-email').value;
-    const password = document.getElementById('auth-password').value;
+            if (!email || !password) {
+                alert("Будь ласка, заповніть усі поля.");
+                return;
+            }
 
-    if (!email || !password) {
-      alert("Будь ласка, заповніть усі поля.");
-      return;
-    }
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    alert("Акаунт успішно створено!");
+                    modal.style.display = 'none';
+                })
+                .catch((error) => {
+                    alert("Помилка реєстрації: " + error.message);
+                });
+        });
 
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        alert("Акаунт успішно створено!");
-        modal.style.display = 'none';
-      })
-      .catch((error) => {
-        alert("Помилка реєстрації: " + error.message);
-      });
-  });
+        // 3. Вхід за поштою та паролем
+        document.getElementById('submit-login-btn').addEventListener('click', () => {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
 
-  // 3. Вхід за поштою та паролем
-  document.getElementById('submit-login-btn').addEventListener('click', () => {
-    const email = document.getElementById('auth-email').value;
-    const password = document.getElementById('auth-password').value;
+            if (!email || !password) {
+                alert("Будь ласка, заповніть усі поля.");
+                return;
+            }
 
-    if (!email || !password) {
-      alert("Будь ласка, заповніть усі поля.");
-      return;
-    }
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    modal.style.display = 'none';
+                })
+                .catch((error) => {
+                    alert("Помилка входу: " + error.message);
+                });
+        });
 
-    signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        modal.style.display = 'none';
-      })
-      .catch((error) => {
-        alert("Помилка входу: " + error.message);
-      });
-  });
-
-  // Відстеження стану користувача
-  onAuthStateChanged(auth, (user) => {
-    const authBtn = Array.from(document.querySelectorAll('button, a')).find(el => el.textContent.includes('Увійти / Реєстрація'));
-    
-    if (user) {
-      if (authBtn) {
-        authBtn.textContent = user.email; // Показуємо пошту замість кнопки входу
-      }
-      console.log("Користувач увійшов:", user.email);
-    } else {
-      if (authBtn) {
-        authBtn.textContent = 'Увійти / Реєстрація';
-      }
-    }
-  });
-</script>
+        // Відстеження стану користувача (зміна кнопки на пошту або вихід)
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                openBtn.textContent = user.email;
+                // За бажанням можна замінити функціонал кнопки на вихід (signOut)
+            } else {
+                openBtn.textContent = 'Увійти / Реєстрація';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -72,7 +72,7 @@
             }
 
             const title = document.getElementById('title').value;
-            const category = document.getElementById('category').value; // Виправлено дужку
+            const category = document.getElementById('category').value;
             const price = document.getElementById('price').value;
             const phone = document.getElementById('phone').value;
             const fileInput = document.getElementById('image-file');
@@ -93,7 +93,7 @@
                     .upload(fileName, file);
 
                 if (uploadError) {
-                    alert("Помилка завантаження фото: " + uploadError.message);
+                    alert("Помилка завантаження фото: " + (uploadError.message || JSON.stringify(uploadError)));
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Опублікувати оголошення';
                     return;

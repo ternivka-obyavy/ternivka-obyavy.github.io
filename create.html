@@ -1,69 +1,12 @@
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Додати оголошення - Тернівка Об'яви</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root { --primary-color: #012b28; --accent-color: #ffce32; --bg-color: #f4f4f9; }
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: var(--bg-color); color: #333; }
-        header { background: var(--primary-color); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; }
-        .logo-area { color: white; text-decoration: none; font-size: 1.3rem; font-weight: bold; }
-        .container { max-width: 600px; margin: 30px auto; padding: 25px; background: white; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
-        h1 { color: var(--primary-color); font-size: 1.5rem; margin-top: 0; margin-bottom: 20px; }
-        label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 0.9rem; color: #555; }
-        input, textarea, select { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 1rem; }
-        .btn { background: var(--accent-color); color: var(--primary-color); border: none; padding: 12px; width: 100%; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 1rem; }
-        .btn:hover { background: #e6b825; }
-        .btn-home { background: white; color: var(--primary-color); padding: 6px 12px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 0.9rem; border: 1px solid var(--primary-color); }
-    </style>
-</head>
-<body>
+<script>
+    const SUPABASE_URL = 'https://lpocqhvozuugcnzgquiu.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_ybld3op1Zra4aqnNEykSiw__28Xp-dC';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    <header>
-        <a href="index.html" class="logo-area">📢 Тернівка Об'яви</a>
-        <a href="index.html" class="btn-home">На головну</a>
-    </header>
-
-    <div class="container">
-        <h1>Створити нове оголошення</h1>
+    async function createAd() {
+        const submitBtn = document.getElementById('submit-btn');
         
-        <form id="create-ad-form" onsubmit="event.preventDefault(); createAd();">
-            <label>Назва оголошення:</label>
-            <input type="text" id="title" placeholder="Наприклад: Продам велосипед" required>
-
-            <label>Категорія:</label>
-            <select id="category">
-                <option value="realty">Нерухомість</option>
-                <option value="auto">Авто</option>
-                <option value="work">Робота</option>
-                <option value="services">Послуги</option>
-                <option value="electronics">Електроніка</option>
-                <option value="home">Дім та сад</option>
-                <option value="sport">Спорт</option>
-                <option value="other">Інші</option>
-            </select>
-
-            <label>Ціна (грн):</label>
-            <input type="number" id="price" placeholder="Залиште порожнім, якщо договірна">
-
-            <label>Телефон для зв'язку:</label>
-            <input type="text" id="phone" placeholder="+380...">
-
-            <label>Виберіть фото з пристрою:</label>
-            <input type="file" id="image-file" accept="image/*" style="padding: 6px;">
-
-            <button type="submit" id="submit-btn" class="btn">Опублікувати оголошення</button>
-        </form>
-    </div>
-
-    <script>
-        const SUPABASE_URL = 'https://lpocqhvozuugcnzgquiu.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_ybld3op1Zra4aqnNEykSiw__28Xp-dC';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        async function createAd() {
+        try {
             const { data: { user } } = await supabaseClient.auth.getUser();
             if (!user) {
                 alert("Будь ласка, увійдіть у систему, щоб додати оголошення!");
@@ -77,7 +20,6 @@
             const phone = document.getElementById('phone').value;
             const fileInput = document.getElementById('image-file');
             
-            const submitBtn = document.getElementById('submit-btn');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Завантаження фото...';
 
@@ -85,18 +27,17 @@
 
             if (fileInput.files.length > 0) {
                 const file = fileInput.files[0];
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+                
+                // Безпечна генерація імені файлу без кирилиці (розв'язує проблему зависання!)
+                const fileExt = file.name.split('.').pop().toLowerCase();
+                const fileName = `img_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
 
                 const { error: uploadError } = await supabaseClient.storage
                     .from('images')
                     .upload(fileName, file);
 
                 if (uploadError) {
-                    alert("Помилка завантаження фото: " + (uploadError.message || JSON.stringify(uploadError)));
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Опублікувати оголошення';
-                    return;
+                    throw new Error("Помилка завантаження фото: " + uploadError.message);
                 }
 
                 const { data: publicURLData } = supabaseClient.storage
@@ -106,7 +47,7 @@
                 imageUrl = publicURLData.publicUrl;
             }
 
-            const { error } = await supabaseClient
+            const { error: insertError } = await supabaseClient
                 .from('announcements')
                 .insert([
                     { 
@@ -119,15 +60,17 @@
                     }
                 ]);
 
-            if (error) {
-                alert("Помилка створення оголошення: " + error.message);
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Опублікувати оголошення';
-            } else {
-                alert("Оголошення успішно створено!");
-                window.location.href = 'index.html';
+            if (insertError) {
+                throw new Error("Помилка бази даних: " + insertError.message);
             }
+
+            alert("Оголошення успішно створено!");
+            window.location.href = 'index.html';
+
+        } catch (err) {
+            alert(err.message);
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Опублікувати оголошення';
         }
-    </script>
-</body>
-</html>
+    }
+</script>

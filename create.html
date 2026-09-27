@@ -14,7 +14,6 @@
         h1 { color: var(--primary-color); font-size: 1.5rem; margin-top: 0; margin-bottom: 20px; }
         label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 0.9rem; color: #555; }
         input, textarea, select { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 1rem; }
-        textarea { resize: vertical; height: 100px; }
         .btn { background: var(--accent-color); color: var(--primary-color); border: none; padding: 12px; width: 100%; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 1rem; }
         .btn:hover { background: #e6b825; }
         .btn-home { background: white; color: var(--primary-color); padding: 6px 12px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 0.9rem; border: 1px solid var(--primary-color); }
@@ -52,10 +51,10 @@
             <label>Телефон для зв'язку:</label>
             <input type="text" id="phone" placeholder="+380...">
 
-            <label>Посилання на фото (URL):</label>
-            <input type="url" id="image_url" placeholder="https://example.com/image.jpg">
+            <label>Виберіть фото з пристрою:</label>
+            <input type="file" id="image-file" accept="image/*" style="padding: 6px;">
 
-            <button type="submit" class="btn">Опублікувати оголошення</button>
+            <button type="submit" id="submit-btn" class="btn">Опублікувати оголошення</button>
         </form>
     </div>
 
@@ -65,7 +64,6 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function createAd() {
-            // Перевіряємо, чи залогінений користувач
             const { data: { user } } = await supabaseClient.auth.getUser();
             if (!user) {
                 alert("Будь ласка, увійдіть у систему, щоб додати оголошення!");
@@ -74,10 +72,39 @@
             }
 
             const title = document.getElementById('title').value;
-            const category = document.getElementById('category').value;
+            const category = document.getElementById('category'].value;
             const price = document.getElementById('price').value;
             const phone = document.getElementById('phone').value;
-            const imageUrl = document.getElementById('image_url').value;
+            const fileInput = document.getElementById('image-file');
+            
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Завантаження фото...';
+
+            let imageUrl = '';
+
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+
+                const { error: uploadError } = await supabaseClient.storage
+                    .from('images')
+                    .upload(fileName, file);
+
+                if (uploadError) {
+                    alert("Помилка завантаження фото: " + uploadError.message);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Опублікувати оголошення';
+                    return;
+                }
+
+                const { data: publicURLData } = supabaseClient.storage
+                    .from('images')
+                    .getPublicUrl(fileName);
+
+                imageUrl = publicURLData.publicUrl;
+            }
 
             const { error } = await supabaseClient
                 .from('announcements')
@@ -88,12 +115,14 @@
                         price: price ? Number(price) : null, 
                         phone: phone, 
                         image_url: imageUrl, 
-                        user_id: user.id // Зв'язуємо оголошення з поточним користувачем
+                        user_id: user.id 
                     }
                 ]);
 
             if (error) {
                 alert("Помилка створення оголошення: " + error.message);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Опублікувати оголошення';
             } else {
                 alert("Оголошення успішно створено!");
                 window.location.href = 'index.html';
